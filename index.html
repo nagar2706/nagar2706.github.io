@@ -7,8 +7,11 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Production">
-<title>Production Tracker — उत्पादन ट्रैकर</title>
+<meta name="apple-mobile-web-app-title" content="Dashboard">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Dashboard — AE Industries</title>
 <style>
 :root{
   --void:#15181c; --panel:#1e2227; --panel-2:#262b31; --panel-3:#2d333a;
@@ -433,8 +436,8 @@ body.has-layer .toast{bottom:calc(132px + var(--safe-b));}
   <div class="main">
     <header class="top" id="top">
       <div class="top-l">
-        <div class="top-hi">उत्पादन व मटेरियल ट्रैकिंग</div>
-        <div class="top-t" id="topTitle">Production Tracker</div>
+        <div class="top-hi">AE Industries · उत्पादन</div>
+        <div class="top-t" id="topTitle">Dashboard</div>
       </div>
       <div class="top-r">
         <button class="sync-pill" id="syncPill" data-act="sync-open" type="button"><span class="dot"></span><span id="syncTxt">Loading…</span></button>
@@ -1789,14 +1792,14 @@ function renderShell(){
   $("#tabs").innerHTML = TABS.filter(t => t.id !== "more").map((t, i) =>
     (i === 2 ? '<button class="tab tab-plus" data-act="entry" type="button" aria-label="New entry"><span class="plus-c">' + ic("plus") + '</span><span>Entry</span></button>' : "") +
     '<button class="tab ' + (UI.tab === t.id ? "on" : "") + '" data-act="tab" data-tab="' + t.id + '" type="button">' + ic(t.ic) + '<span>' + t.t + '</span></button>').join("");
-  $("#side").innerHTML = '<div class="brand"><div class="top-hi">उत्पादन व मटेरियल ट्रैकिंग</div><div class="top-t">Production Tracker</div></div>' +
+  $("#side").innerHTML = '<div class="brand"><div class="top-hi">AE Industries · उत्पादन</div><div class="top-t">Dashboard</div></div>' +
     TABS.map(t => '<button class="sn ' + (UI.tab === t.id ? "on" : "") + '" data-act="tab" data-tab="' + t.id + '" type="button">' + ic(t.ic) + t.side + '<span class="hi">' + t.sideHi + '</span></button>').join("") +
     '<div class="side-h">New entry · नई एंट्री</div>' +
     ENTRIES.map(e => '<button class="se" data-act="new" data-f="' + e.f + '" type="button"><span class="e-n">' + e.n + '</span><span style="color:' + e.c + '">' + ic(e.ic) + '</span>' + e.t + '</button>').join("") +
     '<div class="side-foot"><div class="faint" style="font-size:11px;padding:0 10px;">v' + APP_VER + ' · ' + esc(userName() || "set your name in Settings") + '</div></div>';
   const mb = $('.top-r .icon-b'); if (mb && !mb.innerHTML.trim().startsWith("<svg")) mb.innerHTML = ic("more");
   const tt = TABS.find(t => t.id === UI.tab);
-  $("#topTitle").textContent = UI.tab === "home" ? "Production Tracker" : tt ? tt.side : "Production Tracker";
+  $("#topTitle").textContent = UI.tab === "home" ? "Dashboard" : tt ? tt.side : "Dashboard";
 }
 function renderSync(){
   const pill = $("#syncPill"), txt = $("#syncTxt"); if (!pill) return;
@@ -3210,6 +3213,8 @@ async function boot(){
     }, 400);
   }
 }
+// offline app shell (only when hosted on https, never in the preview)
+if (!PREVIEW && "serviceWorker" in navigator && location.protocol === "https:"){ window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); }); }
 boot().catch(e => { console.error(e); const v = $("#view"); if (v) v.innerHTML = '<div class="empty">Could not start: ' + esc(e.message || e) + '</div>'; });
 
 </script>

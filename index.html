@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#161a1e">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -321,6 +321,46 @@ input[type="date"].in{color-scheme:dark;}
 .entry .e-t{font-size:14px;font-weight:800;line-height:1.2;}
 .entry .e-hi{font-size:11.5px;color:var(--ink-dim);}
 .entry.wide{grid-column:span 2;min-height:0;flex-direction:row;align-items:center;}
+.entry.feat{border-color:var(--amber);background:linear-gradient(135deg,var(--amber-dim),var(--panel) 75%);padding:15px 13px;}
+.entry.feat .e-ico{background:var(--amber);color:#1a1206;width:46px;height:46px;}
+.entry.feat .e-t{font-size:16px;}
+.entry .e-sub{display:block;font-size:11.5px;color:var(--ink-dim);margin-top:3px;line-height:1.35;}
+
+/* production entry (operator's stroke count → manager) */
+.pe-sess{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:10px;align-items:end;}
+.pe-sess .fld{margin-bottom:10px;}
+.pe-sess .segc{margin-bottom:0;}
+.mrow{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;overflow:hidden;transition:border-color .15s,box-shadow .15s;}
+.mrow.on{border-color:var(--amber);box-shadow:0 0 0 3px rgba(230,164,23,.13);}
+.mrow.just{border-color:#2b6b4e;}
+.mrow-h{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:11px 12px;text-align:left;min-height:62px;}
+.mrow-h:hover{background:var(--panel-2);}
+.mrow-no{font-family:var(--mono);font-size:14.5px;font-weight:800;min-width:66px;padding:7px 6px;border-radius:8px;background:var(--panel-3);text-align:center;letter-spacing:.02em;flex-shrink:0;}
+.mrow.on .mrow-no{background:var(--amber);color:#1a1206;}
+.mrow-main{flex:1;min-width:0;}
+.mrow-t{display:block;font-size:11.5px;color:var(--ink-faint);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mrow-s{display:block;font-size:14px;font-weight:700;margin-top:1px;line-height:1.3;}
+.pe-stat{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
+.pe-stat small{font-size:10.5px;color:var(--ink-faint);}
+.pe-in{padding:0 12px 14px;border-top:1px solid var(--line);}
+.pe-set{display:flex;gap:10px;align-items:center;padding:10px 0 12px;}
+.pe-set>div{flex:1;min-width:0;}
+.pe-q{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:10px;}
+.pe-q.three{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,.9fr);}
+.pe-in .in.big{font-size:28px;min-height:62px;}
+.pe-in .pe-q.three .in.big{font-size:22px;}
+.pe-calc{font-size:13px;line-height:1.55;color:var(--ink-dim);background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:-2px 0 14px;}
+.pe-calc b{color:var(--ink);}
+.pe-calc .pe-big{font-size:21px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;}
+.pe-prev{font-size:12px;color:#f2c35a;margin:-4px 0 12px;}
+.reg-r{display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--line);}
+.reg-r:last-child{border-bottom:0;}
+.reg-r .lrow{border-bottom:0;flex:1;min-width:0;}
+.reg-undo{flex-shrink:0;border:1px solid var(--line);background:var(--panel-2);border-radius:7px;padding:7px 10px;font-size:12px;font-weight:700;color:var(--ink-dim);}
+.reg-undo:hover{border-color:var(--red);color:#f08a7c;}
+.in.tall{min-height:56px;}
+.pe-cta{width:100%;margin-top:12px;flex-wrap:wrap;}
+.pe-cta .pe-cta-s{font-size:12px;font-weight:600;opacity:.72;}
 
 /* timeline */
 .tl{position:relative;}
@@ -406,6 +446,7 @@ body.has-layer .toast{bottom:calc(132px + var(--safe-b));}
   .two-col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start;}
   .entry-grid{grid-template-columns:repeat(3,1fr);}
   .entry.wide{grid-column:span 3;}
+  .pe-cta{width:auto;}
   .layer .sheet{left:auto;width:min(580px,100%);border-left:1px solid var(--line-2);transform:translateX(30px);}
   .layer.in .sheet{transform:none;}
   .sheet.wide{width:min(860px,100%);}
@@ -470,7 +511,7 @@ const TOOL_BACKEND_URL = "https://script.google.com/macros/s/AKfycbwJ4mCkKguQ2dh
 
 /* ===================================================================================== */
 const PREVIEW = false;          // true only in the hosted preview build (sample data, no server)
-const APP_VER = "1.0";
+const APP_VER = "1.1";
 const DEFAULT_PIN = "1234";     // manager PIN until changed in Settings (same default as PM Tracker)
 const SYNC_EVERY_MS = 90 * 1000;
 
@@ -808,7 +849,7 @@ const Z_STEP = {ok:0, rej:0, rwk:0, sent:0};
 
 function newState(){
   return { comps:new Map(), parties:new Map(), scheds:new Map(), coils:new Map(), grns:[], lots:new Map(),
-    mc:{}, mcLast:{}, disp:[], log:[], cfg:{}, voided:new Set(), voidBy:new Map(), warn:[], evById:new Map() };
+    mc:{}, mcLast:{}, mcRun:{}, mcCtr:{}, mcOp:{}, disp:[], log:[], cfg:{}, voided:new Set(), voidBy:new Map(), warn:[], evById:new Map() };
 }
 
 function buildState(events){
@@ -865,6 +906,12 @@ function mcCount(S, mc, comp, step, qty, ts){
   S.mcLast[mc] = {ts, comp, step, qty};
 }
 const N = v => +v || 0;
+/* per-machine memory used by the production entry: last operator per shift, last counter reading */
+function mcNote(S, e){
+  const d = e.d || {}; if (!d.mc) return;
+  if (d.person) S.mcOp[d.mc + "|" + (d.shift || "")] = d.person;
+  if (d.ctr != null && d.ctr !== "") S.mcCtr[d.mc] = {ctr:N(d.ctr), ts:e.ts, shift:d.shift || "", date:evDay(e)};
+}
 
 function applyEv(S, e){
   const d = e.d || {};
@@ -877,11 +924,11 @@ function applyEv(S, e){
     case "void": break;
 
     case "rm.in": {
-      const g = {id:e.id, ts:e.ts, date:d.date || dayKey(e.ts), party:d.party, doc:d.doc || "", form:d.form || "coil",
+      const g = {id:e.id, ts:e.ts, date:d.date || dayKey(e.ts), party:d.party, doc:d.doc || "", mrn:d.mrn || "", form:d.form || "coil",
         grade:d.grade || "", thk:N(d.thk), width:N(d.width), len:N(d.len), coils:[]};
       for (const c of (d.coils || [])){
         if (!c.id) continue;
-        S.coils.set(c.id, {id:c.id, no:c.no || c.id, kg:N(c.kg), used:0, heat:c.heat || "", grn:e.id, doc:g.doc, party:g.party,
+        S.coils.set(c.id, {id:c.id, no:c.no || c.id, kg:N(c.kg), used:0, heat:c.heat || "", grn:e.id, doc:g.doc, mrn:g.mrn, party:g.party,
           form:g.form, grade:g.grade, thk:g.thk, width:g.width, len:g.len, date:g.date, ts:e.ts, done:false, uses:[], closeKg:0});
         g.coils.push(c.id);
       }
@@ -901,6 +948,7 @@ function applyEv(S, e){
       const s = getStep(lot, 0); s.ok += N(d.ok); s.rej += N(d.rej);
       useCoil(S, lot, d.coil, d.kg, d.coilDone, e);
       mcCount(S, d.mc, lot.comp, 0, N(d.ok) + N(d.rej), e.ts);
+      if (d.mc){ S.mcRun[d.mc] = {lot:lot.id, comp:lot.comp, coil:d.coil || "", ts:e.ts, date:evDay(e)}; mcNote(S, e); }
       hist(lot, e, 0, {ok:N(d.ok), rej:N(d.rej), kg:N(d.kg), coil:d.coil, mc:d.mc, die:d.die, person:d.person, shift:d.shift});
       break;
     }
@@ -908,6 +956,7 @@ function applyEv(S, e){
       const lot = needLot(S, d.lot); const s = getStep(lot, d.step);
       s.ok += N(d.ok); s.rej += N(d.rej); s.rwk += N(d.rwk);
       mcCount(S, d.mc, lot.comp, N(d.step), N(d.ok) + N(d.rej) + N(d.rwk), e.ts);
+      mcNote(S, e);
       hist(lot, e, N(d.step), {ok:N(d.ok), rej:N(d.rej), rwk:N(d.rwk), mc:d.mc, die:d.die, person:d.person, shift:d.shift});
       break;
     }
@@ -1236,7 +1285,7 @@ function evInfo(S, e){
   const pn = lot ? compPN(S, lot.comp) : d.comp ? compPN(S, d.comp) : "";
   switch (e.type){
     case "rm.in": { const k = sum(d.coils || [], c => c.kg); t = "RM inward · " + kg(k);
-      s = specLabel(d) + " · " + (d.coils || []).length + " " + plural((d.coils || []).length, d.form === "sheet" ? "bundle" : "coil") + (d.party ? " · " + partyName(S, d.party) : ""); break; }
+      s = (d.mrn ? mrnTxt(d.mrn) + " · " : "") + specLabel(d) + " · " + (d.coils || []).length + " " + plural((d.coils || []).length, d.form === "sheet" ? "bundle" : "coil") + (d.party ? " · " + partyName(S, d.party) : ""); break; }
     case "setup": t = "Die setup · " + (d.mc || ""); s = compPN(S, d.comp) + (d.opName ? " · " + d.opName : "") + (d.die ? " · die " + d.die : ""); break;
     case "blank": t = "Blanking · " + n0(d.ok) + " OK" + (N(d.rej) ? " · " + n0(d.rej) + " rej" : ""); s = pn + " · lot " + lotNo + (d.mc ? " · " + d.mc : ""); break;
     case "op": t = (lot ? stepName(lot, N(d.step)) : "Press op") + " · " + n0(d.ok) + " OK" + (N(d.rej) ? " · " + n0(d.rej) + " rej" : "") + (N(d.rwk) ? " · " + n0(d.rwk) + " rework" : ""); s = pn + " · lot " + lotNo + (d.mc ? " · " + d.mc : ""); break;
@@ -1254,6 +1303,10 @@ function evInfo(S, e){
   return {t, s, st:L.st, lotId, hi:L.hi};
 }
 
+function strokeNote(d){
+  if (!d || !N(d.strokes)) return "";
+  return "Strokes " + N(d.strokes) + (N(d.ups) > 1 ? " × " + N(d.ups) + " pcs" : "") + (d.ctr != null && d.ctr !== "" ? " (counter " + N(d.ctr0) + "→" + N(d.ctr) + ")" : "");
+}
 /* rows written to the readable "Log" tab of the Google Sheet (16 columns) */
 const LOG_HEAD = ["Date","Time","Entry","Lot / Ref","Part no.","Part name","Step / operation","OK qty","Rej qty","Kg","Machine","Die","Person","Party","Doc no.","Remarks"];
 function rowsFor(S, e){
@@ -1263,15 +1316,15 @@ function rowsFor(S, e){
      rej === "" || rej == null ? "" : N(rej), kgv === "" || kgv == null ? "" : N(kgv), mc || "", die || "", person || "", party || "", doc || "", rem || ""];
   const lotInfo = (id, no, comp) => { const l = S.lots.get(id); return {no: l ? l.no : (no || ""), comp: l ? l.comp : comp, lot:l}; };
   switch (e.type){
-    case "rm.in": return (d.coils || []).map(c => R(c.no, null, specLabel(d), "", "", c.kg, "", "", "", partyName(S, d.party), d.doc, (c.heat ? "Heat " + c.heat : "") + (d.remark ? " " + d.remark : "")));
+    case "rm.in": return (d.coils || []).map(c => R(c.no, null, specLabel(d), "", "", c.kg, "", "", "", partyName(S, d.party), d.doc, [d.mrn ? mrnTxt(d.mrn) : "", c.heat ? "Heat " + c.heat : "", d.remark].filter(Boolean).join(" · ")));
     case "setup": return [R("", d.comp, d.opName || "", "", "", "", d.mc, d.die, d.person, "", "", d.remark)];
     case "blank": { const li = lotInfo(d.lot, d.lotNo, d.comp); const c = S.coils.get(d.coil);
       const route = li.lot ? li.lot.route : d.route || [];
       return [R(li.no, li.comp, (route[0] || {}).op || "Blanking", d.ok, d.rej, d.kg, d.mc, d.die, d.person, "", c ? c.no : "",
-        [c && c.heat ? "Heat " + c.heat : "", d.coilDone ? "Coil finished" : "", d.shift ? "Shift " + d.shift : "", d.remark].filter(Boolean).join(" · "))]; }
+        [c && c.mrn ? mrnTxt(c.mrn) : "", c && c.heat ? "Heat " + c.heat : "", d.coilDone ? "Coil finished" : "", d.shift ? "Shift " + d.shift : "", strokeNote(d), d.remark].filter(Boolean).join(" · "))]; }
     case "op": case "rwk": case "insp": { const li = lotInfo(d.lot); const op = li.lot ? stepName(li.lot, N(d.step)) : "";
       return [R(li.no, li.comp, op, d.ok, d.rej, "", d.mc, d.die, d.person, "", "",
-        [N(d.rwk) ? "Rework hold " + N(d.rwk) : "", N(d.boxes) ? N(d.boxes) + " boxes" : "", d.shift ? "Shift " + d.shift : "", d.remark].filter(Boolean).join(" · "))]; }
+        [N(d.rwk) ? "Rework hold " + N(d.rwk) : "", N(d.boxes) ? N(d.boxes) + " boxes" : "", d.shift ? "Shift " + d.shift : "", strokeNote(d), d.remark].filter(Boolean).join(" · "))]; }
     case "out.send": return (d.lines || []).map(L => { const li = lotInfo(L.lot, L.lotNo, L.comp); const route = li.lot ? li.lot.route : L.route || [];
       return R(li.no, li.comp, (route[N(L.step)] || {}).op || "", L.qty, "", L.kg || "", "", "", "", partyName(S, d.party), d.doc, [d.veh ? "Vehicle " + d.veh : "", d.remark].filter(Boolean).join(" · ")); });
     case "out.recv": return (d.lines || []).map(L => { const li = lotInfo(L.lot, L.lotNo, L.comp); const route = li.lot ? li.lot.route : L.route || [];
@@ -1350,7 +1403,7 @@ function sampleEvents(){
     p3: {id:"p3", partNo:"HP-0871", name:"Hinge Plate", cust:"cA", form:"coil", grade:"CRCA IS513 CR2", thk:2, width:60, wt:0.085, pack:250,
       route:[st("blank", "Blanking", {die:"1030"}), st("out", "Embossing", {proc:"job", party:"sJW"}), st("press", "Piercing", {die:"1031"}), st("out", "Hardening & tempering", {proc:"heat", party:"sHT"}), st("out", "Zinc plating", {proc:"plating", party:"sPL"}), st("insp", "Inspection & packing")]},
     p4: {id:"p4", partNo:"CL-3308", name:"Hose Clip", cust:"cB", form:"coil", grade:"Spring steel CK67", thk:0.8, width:12, wt:0.006, pack:1000,
-      route:[st("blank", "Blanking", {die:"1040"}), st("press", "Forming", {die:"1041"}), st("out", "Hardening", {proc:"heat", party:"sHT"}), st("insp", "Inspection & packing")]},
+      route:[st("blank", "Blanking", {die:"1040", ups:2}), st("press", "Forming", {die:"1041"}), st("out", "Hardening", {proc:"heat", party:"sHT"}), st("insp", "Inspection & packing")]},
     p5: {id:"p5", partNo:"SC-5120", name:"Spring Clip", cust:"cC", form:"wire", grade:"MS wire", thk:2.5, width:0, wt:0.012, pack:1000,
       route:[st("blank", "Wire cutting", {die:"1050"}), st("press", "Bending", {die:"1051"}), st("out", "Zinc plating", {proc:"plating", party:"sPL"}), st("insp", "Inspection & packing")]},
     p6: {id:"p6", partNo:"LB-1190", name:"Lamp Bracket", cust:"cC", form:"coil", grade:"GI", thk:1, width:95, wt:0.06, pack:200,
@@ -1361,9 +1414,11 @@ function sampleEvents(){
 
   // ---- RM receipts
   const coils = [];
+  let mrnN = 100;
   const GRN = (dAgo, party, doc, form, grade, thk, width, kgs, heat) => {
-    const list = kgs.map((k, i) => ({id:"sc-" + doc + "-" + (i + 1), no:doc.replace(/\D/g, "").slice(-4) + "-" + (i + 1), kg:k, heat}));
-    E("rm.in", {date:dayKey(tAt(dAgo, 10)), party, doc, form, grade, thk, width, len:0, coils:list}, tAt(dAgo, 10), "Deepak");
+    const mn = String(++mrnN).padStart(4, "0"), mrn = "MRN/26-27/" + mn;
+    const list = kgs.map((k, i) => ({id:"sc-" + doc + "-" + (i + 1), no:mn + "-" + (i + 1), kg:k, heat}));
+    E("rm.in", {date:dayKey(tAt(dAgo, 10)), party, doc, mrn, form, grade, thk, width, len:0, coils:list}, tAt(dAgo, 10), "Deepak");
     for (const c of list) coils.push(Object.assign({}, c, {form, grade, thk, width, t:tAt(dAgo, 10), rem:c.kg}));
   };
   GRN(21, "sRM", "INV-4471", "coil", "CRCA IS513 CR2", 1.2, 85, [980, 1010, 995], "H24871");
@@ -1542,6 +1597,7 @@ const IC = {
   sync:'<path d="M20 11a8 8 0 00-14-5L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0014 5l2-2"/><path d="M20 21v-5h-5"/>',
   copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3"/>',
   check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  counter:'<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6.5 9.5v5M10 9.5h3.5v5H10zM17.5 9.5v5"/>',
 };
 function ic(n, cls){ return '<svg class="i ' + (cls || "") + '" viewBox="0 0 24 24" aria-hidden="true">' + (IC[n] || "") + "</svg>"; }
 
@@ -1603,7 +1659,8 @@ function pageSheet(o){
   el._draw = draw; draw();
   return el;
 }
-function redrawPages(){ for (const L of LAYERS) if (L.el._draw && !L.el._form) try { L.el._draw(); } catch (e) { console.error(e); } }
+/* pages are fully redrawn; open forms only get a light refresh that never touches their inputs */
+function redrawPages(){ for (const L of LAYERS) try { if (L.el._form){ if (L.el._refresh) L.el._refresh(); } else if (L.el._draw) L.el._draw(); } catch (e) { console.error(e); } }
 
 /* ---------- picker (bottom sheet list with search) ---------- */
 function pick(o){
@@ -1682,9 +1739,9 @@ function fld(label, hi, inner, o){
     inner + (o.hint != null ? '<div class="hint ' + (o.hintCls || "") + '" ' + (o.hintId ? 'id="' + o.hintId + '"' : "") + '>' + o.hint + '</div>' : "") + '</div>';
 }
 function inNum(bind, val, o){ o = o || {};
-  return '<input class="in ' + (o.big ? "big " : "") + (o.cls || "") + '" type="text" inputmode="' + (o.dec ? "decimal" : "numeric") + '" data-bind="' + bind + '" value="' + esc(val == null ? "" : val) + '" placeholder="' + esc(o.ph || "0") + '" autocomplete="off"' + (o.id ? ' id="' + o.id + '"' : "") + (o.ro ? " readonly" : "") + '>'; }
+  return '<input class="in ' + (o.big ? "big " : "") + (o.cls || "") + '" type="text" inputmode="' + (o.dec ? "decimal" : "numeric") + '" data-bind="' + bind + '" value="' + esc(val == null ? "" : val) + '" placeholder="' + esc(o.ph || "0") + '" autocomplete="off"' + (o.id ? ' id="' + o.id + '"' : "") + (o.ent ? ' enterkeyhint="' + o.ent + '"' : "") + (o.ro ? " readonly" : "") + '>'; }
 function inText(bind, val, o){ o = o || {};
-  return '<input class="in ' + (o.cls || "") + '" type="' + (o.type || "text") + '" data-bind="' + bind + '" value="' + esc(val == null ? "" : val) + '" placeholder="' + esc(o.ph || "") + '" autocomplete="off"' + (o.list ? ' list="' + o.list + '"' : "") + (o.cap ? ' autocapitalize="characters"' : "") + (o.id ? ' id="' + o.id + '"' : "") + '>'; }
+  return '<input class="in ' + (o.cls || "") + '" type="' + (o.type || "text") + '" data-bind="' + bind + '" value="' + esc(val == null ? "" : val) + '" placeholder="' + esc(o.ph || "") + '" autocomplete="off"' + (o.list ? ' list="' + o.list + '"' : "") + (o.cap ? ' autocapitalize="characters"' : "") + (o.id ? ' id="' + o.id + '"' : "") + (o.ent ? ' enterkeyhint="' + o.ent + '"' : "") + '>'; }
 function inArea(bind, val, ph){ return '<textarea class="in" data-bind="' + bind + '" placeholder="' + esc(ph || "") + '" rows="2">' + esc(val || "") + '</textarea>'; }
 function datalist(id, arr){ return '<datalist id="' + id + '">' + arr.map(x => '<option value="' + esc(x) + '">').join("") + '</datalist>'; }
 function segc(bind, val, opts){
@@ -1710,8 +1767,9 @@ function formSheet(def){
     F.refoot();
   };
   F.refoot = () => {
+    const sl = typeof def.saveLabel === "function" ? def.saveLabel(F) : def.saveLabel;
     foot.innerHTML = (def.summary ? '<div class="f-sum">' + (def.summary(F) || "&nbsp;") + '</div>' : "") +
-      '<button class="btn btn-primary btn-block btn-lg" data-fa="save" type="button">' + esc(def.saveLabel || "Save · सेव करें") + '</button>';
+      (def.noSave && def.noSave(F) ? "" : '<button class="btn btn-primary btn-block btn-lg" data-fa="save" type="button">' + esc(sl || "Save · सेव करें") + '</button>');
   };
   F.close = () => closeTop();
   F.el = el;
@@ -1776,6 +1834,7 @@ const TABS = [
   {id:"more", t:"More", hi:"और", side:"Masters & settings", sideHi:"सेटिंग", ic:"more"},
 ];
 const ENTRIES = [
+  {f:"prod", n:"★", t:"Production entry", hi:"ऑपरेटर का प्रोडक्शन — स्ट्रोक काउंटर से", sub:"Operator tells the stroke count → tap machine, type, save. Covers blanking and press operations.", ic:"counter", c:"var(--amber)", feat:true},
   {f:"rm", n:1, t:"RM inward", hi:"कच्चा माल आवक", ic:"rm", c:"var(--st-rm)"},
   {f:"setup", n:2, t:"Die setup", hi:"डाई सेटअप", ic:"setup", c:"var(--st-plant)"},
   {f:"blank", n:3, t:"Blanking", hi:"ब्लैंकिंग", ic:"blank", c:"var(--st-plant)"},
@@ -1904,9 +1963,11 @@ function viewHome(){
   const alerts = computeAlerts(S);
   if (alerts.length) h += '<section class="span-12">' + alerts.slice(0, 6).map(a => '<button class="alert ' + a.lvl + '" ' + a.act + ' type="button"><span class="a-ico">' + ic(a.ic) + '</span><span class="a-t">' + a.t + '<span class="a-s">' + esc(a.s || "") + '</span></span>' + ic("chev", "faint") + '</button>').join("") + '</section>';
   const tile = (l, hi, v, y, unit) => '<div class="kpi"><div class="kpi-l">' + l + '<span class="hi">' + hi + '</span></div><div class="kpi-v">' + n0(v) + (unit ? '<small>' + unit + '</small>' : "") + '</div><div class="kpi-s">Yesterday ' + n0(y) + '</div></div>';
+  const ses = prodSession(), sesMc = new Set(peRegister(ses.date, ses.shift).map(r => r.mc).filter(Boolean)).size, allMc = Math.max(machines().length, sesMc);
   h += '<section class="panel span-12"><div class="ph"><h2>Today<span class="hi">आज</span></h2><span class="ph-sub">' + fmtDY(new Date()) + ' · shift ' + shiftNow() + '</span></div><div class="kpi-row">' +
     tile("Blanked", "ब्लैंकिंग", T.blank, Y.blank, "pcs") + tile("Press operations", "प्रेस ऑपरेशन", T.press, Y.press, "pcs") +
-    tile("Inspected OK", "निरीक्षण पास", T.insp, Y.insp, "pcs") + tile("Dispatched", "डिस्पैच", T.disp, Y.disp, "pcs") + '</div></section>';
+    tile("Inspected OK", "निरीक्षण पास", T.insp, Y.insp, "pcs") + tile("Dispatched", "डिस्पैच", T.disp, Y.disp, "pcs") + '</div>' +
+    '<button class="btn btn-primary btn-lg pe-cta" data-act="new" data-f="prod" type="button">' + ic("counter") + 'Enter production <span class="pe-cta-s">' + (allMc ? sesMc + " of " + allMc + " machines done · shift " + ses.shift : "from the operators' stroke counts") + '</span></button></section>';
   const outSub = Object.entries(P.outBy).filter(x => x[1] > 0).map(([k, v]) => (PROCS[k] ? PROCS[k].en : k) + " " + n0(v)).join(" · ");
   const stage = (st, v, unit, sub, act) => '<button class="stage" ' + act + ' type="button"><span class="sw" style="background:' + STAGES[st].color + '"></span><span class="st-txt"><span class="st-l">' + STAGES[st].en + '<span class="hi">' + STAGES[st].hi + '</span></span>' +
     (sub ? '<span class="st-sub" style="display:block">' + sub + '</span>' : "") + '</span><span class="st-v">' + (unit === "kg" ? kgs(v) : n0(v)) + '<small>' + unit + '</small></span>' + ic("chev", "chev") + '</button>';
@@ -1967,15 +2028,18 @@ function schedLine(S, r){
 function machineList(S, limit){
   const ms = machines();
   if (!ms.length) return '<div class="empty">' + (TOOLS.err && !isDemo() ? "Could not read PM Tracker: " + esc(TOOLS.err) : "No machines found in PM Tracker yet.") + '<span class="hi">मशीन डेटा PM Tracker से आता है</span></div>';
+  const tdk = dayKey(), tdy = {};
+  for (const e of S.log){ if ((e.type === "blank" || e.type === "op") && !isVoid(S, e) && evDay(e) === tdk){ const d = e.d || {}; if (d.mc) tdy[d.mc] = (tdy[d.mc] || 0) + N(d.ok) + N(d.rej); } }
   const rowsM = ms.map(m => {
     const su = S.mc[m.toolNo], last = S.mcLast[m.toolNo];
     let rank = 3, st = badge("b-mute", "Idle"), sub = "";
     if (m.openBreakdownId){ rank = 0; st = badge("b-bad", "Down"); sub = m.downSince ? "Down " + dur(Date.now() - new Date(m.downSince)) : "Breakdown open"; }
     else if (su && Date.now() - new Date((last && last.ts) || su.ts) < 18 * 36e5){ rank = 1; st = badge("b-ok", "Running"); }
     if (su){ const dd = su.die ? dieByNo(su.die) : null, dpm = dd ? toolPM(dd) : null;
-      sub = (sub ? sub + " · " : "") + compPN(S, su.comp) + " · " + (S.comps.get(su.comp) ? stepName({route:S.comps.get(su.comp).route}, su.step) : "") + (su.die ? " · die " + su.die + (dpm && dpm.code === "over" ? " (die PM overdue)" : "") : "") + (su.qty ? " · " + n0(su.qty) + " pcs since setup" : ""); }
+      sub = (sub ? sub + " · " : "") + compPN(S, su.comp) + " · " + (S.comps.get(su.comp) ? stepName({route:S.comps.get(su.comp).route}, su.step) : "") + (su.die ? " · die " + su.die + (dpm && dpm.code === "over" ? " (die PM overdue)" : "") : ""); }
+    if (tdy[m.toolNo]) sub += (sub ? " · " : "") + "today " + n0(tdy[m.toolNo]) + " pcs";
     const pm = toolPM(m); if (pm.code !== "ok" && !m.openBreakdownId) st += " " + badge(pm.code === "over" ? "b-bad" : "b-warn", pm.label);
-    return {rank, html:'<div class="lrow"><span class="l-ico">' + ic("machine") + '</span><span class="l-main"><span class="l-t" style="display:block">' + esc(m.toolNo) + ' <span class="hi" style="font-size:12px">' + esc(m.toolName || "") + '</span></span><span class="l-s" style="display:block">' + esc(sub || "No setup recorded") + '</span></span><span style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">' + st + '</span></div>'};
+    return {rank, html:'<button class="lrow" data-act="pe" data-mc="' + esc(m.toolNo) + '" type="button" title="Enter production on ' + esc(m.toolNo) + '"><span class="l-ico">' + ic("machine") + '</span><span class="l-main"><span class="l-t" style="display:block">' + esc(m.toolNo) + ' <span class="hi" style="font-size:12px">' + esc(m.toolName || "") + '</span></span><span class="l-s" style="display:block">' + esc(sub || "No setup recorded") + '</span></span><span style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">' + st + '</span></button>'};
   }).sort((a, b) => a.rank - b.rank);
   return rowsM.slice(0, limit || 999).map(x => x.html).join("") + (limit && rowsM.length > limit ? '<div class="hint">+' + (rowsM.length - limit) + ' more</div>' : "");
 }
@@ -2016,13 +2080,13 @@ function viewTrack(){
   if (q){
     list = all.filter(l => {
       const c = S.comps.get(l.comp) || {};
-      const hay = [l.no, c.partNo, c.name, partyName(S, c.cust)].concat(l.coils.map(x => { const co = S.coils.get(x.coil); return co ? co.no + " " + co.heat + " " + co.doc : ""; }))
+      const hay = [l.no, c.partNo, c.name, partyName(S, c.cust)].concat(l.coils.map(x => { const co = S.coils.get(x.coil); return co ? co.no + " " + co.heat + " " + co.doc + " " + (co.mrn || "") : ""; }))
         .concat(l.dispList.map(x => x.inv)).concat(l.sends.map(x => partyName(S, x.party) + " " + x.doc)).join(" ");
       return norm(hay).includes(q);
     });
   }
   list.sort((a, b) => (b.lastTs || b.ts) < (a.lastTs || a.ts) ? -1 : 1);
-  let h = '<label class="search"><span class="sr">Search lots</span>' + ic("search") + '<input type="search" id="trackQ" placeholder="Lot, part no., coil, heat no., invoice…" value="' + esc(UI.trackQ) + '" autocomplete="off"></label>';
+  let h = '<label class="search"><span class="sr">Search lots</span>' + ic("search") + '<input type="search" id="trackQ" placeholder="Lot, part no., coil, heat no., MRN, invoice…" value="' + esc(UI.trackQ) + '" autocomplete="off"></label>';
   if (!q) h += '<div class="chips">' + F.map(f => '<button class="chip ' + (UI.trackF === f[0] ? "on" : "") + '" data-act="track-f" data-f="' + f[0] + '" type="button">' + f[1] + '<span class="n">' + counts[f[0]] + '</span></button>').join("") + '</div>';
   else h += '<div class="hint" style="margin:-2px 2px 10px">' + list.length + ' ' + plural(list.length, "lot") + ' match “' + esc(UI.trackQ) + '” (all statuses)</div>';
   h += '<div class="legend" style="margin:0 2px 12px">' + ["plant", "out", "insp", "fg"].map(st => '<span><i style="background:' + STAGES[st].color + '"></i>' + STAGES[st].en + '</span>').join("") + '</div>';
@@ -2054,7 +2118,7 @@ function lotPage(id){
   if (lot.coils.length || lot.sends.length){
     h += '<div class="box"><div class="box-h">Traceability · ट्रेसबिलिटी</div>' + lot.coils.map(x => {
       const co = S.coils.get(x.coil); if (!co) return "";
-      return '<button class="lrow" data-act="coil" data-id="' + esc(co.id) + '" type="button"><span class="l-ico" style="color:var(--st-rm)">' + ic("rm") + '</span><span class="l-main"><span class="l-t" style="display:block">Coil ' + esc(co.no) + (co.heat ? ' · heat ' + esc(co.heat) : "") + '</span><span class="l-s" style="display:block">' + esc(specLabel(co)) + ' · ' + esc(partyName(S, co.party) || "supplier —") + (co.doc ? ' · ' + esc(co.doc) : "") + ' · recd ' + fmtD(co.ts) + '</span></span><span class="l-r">' + kg(x.kg) + '<small>used</small></span></button>';
+      return '<button class="lrow" data-act="coil" data-id="' + esc(co.id) + '" type="button"><span class="l-ico" style="color:var(--st-rm)">' + ic("rm") + '</span><span class="l-main"><span class="l-t" style="display:block">Coil ' + esc(co.no) + (co.heat ? ' · heat ' + esc(co.heat) : "") + '</span><span class="l-s" style="display:block">' + (co.mrn ? esc(mrnTxt(co.mrn)) + ' · ' : '') + esc(specLabel(co)) + ' · ' + esc(partyName(S, co.party) || "supplier —") + (co.doc ? ' · ' + esc(co.doc) : "") + ' · recd ' + fmtD(co.ts) + '</span></span><span class="l-r">' + kg(x.kg) + '<small>used</small></span></button>';
     }).join("") + '</div>';
   }
   if (lot.dispList.length) h += '<div class="box"><div class="box-h">Dispatches · डिस्पैच</div>' + lot.dispList.map(d => '<div class="lrow"><span class="l-ico" style="color:var(--st-fg)">' + ic("disp") + '</span><span class="l-main"><span class="l-t" style="display:block">' + esc(partyName(S, d.cust)) + '</span><span class="l-s" style="display:block">Invoice ' + esc(d.inv || "—") + ' · ' + fmtDayKey(d.date) + '</span></span><span class="l-r">' + n0(d.qty) + '<small>pcs</small></span></div>').join("") + '</div>';
@@ -2087,7 +2151,7 @@ function tlItem(S, lot, e){
   }
   const vb = v ? S.voidBy.get(e.id) : null;
   return '<div class="tl-it tk-' + k + (v ? " void" : "") + '"><div class="tl-top"><span>' + fmtDT(e.ts) + '</span><span>' + esc(e.by || "") + (!DB.ids.has(e.id) && MODE === "online" ? " ⏳" : "") + '</span></div><div class="tl-t">' + esc(t) + '</div>' +
-    (s ? '<div class="tl-s">' + esc(s) + '</div>' : "") + (v ? '<div class="tl-s" style="color:#f08a7c">Cancelled' + (vb && vb.d.reason ? ": " + esc(vb.d.reason) : "") + '</div>' : '<button class="link" style="font-size:12px;margin-top:4px;color:var(--ink-faint)" data-act="void" data-id="' + esc(e.id) + '" type="button">Cancel entry</button>') + '</div>';
+    (s ? '<div class="tl-s">' + esc(s) + '</div>' : "") + (v ? '<div class="tl-s" style="color:#f08a7c">Cancelled' + (vb && vb.d.reason ? ": " + esc(vb.d.reason) : "") + '</div>' : '<div class="row" style="gap:14px;margin-top:4px">' + (opEditable(S, e) ? '<button class="link" style="font-size:12px" data-act="ev-edit" data-id="' + esc(e.id) + '" type="button">Edit</button>' : '') + '<button class="link" style="font-size:12px;color:var(--ink-faint)" data-act="void" data-id="' + esc(e.id) + '" type="button">Delete entry</button></div>') + '</div>';
 }
 function nextAction(S, lot){
   const b = lot.bk.find(x => x.stage !== "fg");
@@ -2116,6 +2180,8 @@ function viewStock(){
       return '<div class="card s-rm"><button class="c-top" style="background:none;border:0;padding:0;width:100%;text-align:left" data-act="rm-toggle" data-k="' + esc(g.key) + '" type="button"><div><div class="c-title">' + esc(specLabel(g.spec)) + '</div><div class="c-sub">' + g.coils.length + ' ' + plural(g.coils.length, "coil") + (nd ? ' · need ' + kg(nd.kg) + ' for ' + monthLabel(monthKey()) : "") + '</div></div><div class="c-big">' + kgs(g.kg) + '<small>kg</small>' + (st ? '<div style="margin-top:4px">' + st + '</div>' : "") + '</div></button>' +
         (open ? '<div style="margin-top:8px">' + g.coils.map(co => coilRow(S, co)).join("") + '</div>' : (g.coils.length ? '<button class="link" style="margin-top:8px;font-size:12px" data-act="rm-toggle" data-k="' + esc(g.key) + '" type="button">Show coils ›</button>' : "")) + '</div>';
     }).join("") + '</div>';
+    const grns = S.grns.slice().sort((a, b) => b.ts < a.ts ? -1 : 1).slice(0, 10);
+    if (grns.length) h += '<div class="sec-h">Recent receipts by MRN · हाल की आवक</div><div class="panel" style="padding:4px 12px">' + grns.map(g => grnRow(S, g)).join("") + '</div>';
     const done = [...S.coils.values()].filter(c => c.done).sort((a, b) => (b.closedAt || b.ts) < (a.closedAt || a.ts) ? -1 : 1).slice(0, 10);
     if (done.length) h += '<div class="sec-h">Recently finished coils · खत्म कॉइल</div><div class="panel" style="padding:4px 12px">' + done.map(co => coilRow(S, co)).join("") + '</div>';
   } else if (UI.stockSeg === "out"){
@@ -2142,14 +2208,35 @@ function viewStock(){
 }
 function coilRow(S, co){
   const used = co.kg > 0 ? pct(co.kg - co.rem, co.kg) : 0;
-  return '<button class="lrow" data-act="coil" data-id="' + esc(co.id) + '" type="button"><span class="l-main"><span class="l-t" style="display:block">' + esc(co.no) + (co.heat ? ' <span class="hi" style="font-size:12px">heat ' + esc(co.heat) + '</span>' : "") + '</span><span class="l-s" style="display:block">' + esc(partyName(S, co.party) || "—") + ' · ' + fmtD(co.ts) + ' · ' + daysSince(co.ts) + ' d old</span>' +
+  return '<button class="lrow" data-act="coil" data-id="' + esc(co.id) + '" type="button"><span class="l-main"><span class="l-t" style="display:block">' + esc(co.no) + (co.heat ? ' <span class="hi" style="font-size:12px">heat ' + esc(co.heat) + '</span>' : "") + '</span><span class="l-s" style="display:block">' + (co.mrn ? esc(mrnTxt(co.mrn)) + ' · ' : '') + esc(partyName(S, co.party) || "—") + ' · ' + fmtD(co.ts) + ' · ' + daysSince(co.ts) + ' d old</span>' +
     (co.done ? "" : '<span class="meter steel" style="height:5px;margin-top:6px;display:block"><i style="width:' + clamp(100 - used, 0, 100) + '%"></i></span>') + '</span><span class="l-r">' + (co.done ? badge("b-mute", "Finished") : kg(co.rem) + '<small>of ' + kgs(co.kg) + '</small>') + '</span></button>';
+}
+function grnRow(S, g){
+  const cs = g.coils.map(id => S.coils.get(id)).filter(Boolean), kin = sum(cs, c => c.kg), rem = sum(cs, c => c.rem);
+  return '<button class="lrow" data-act="grn" data-id="' + esc(g.id) + '" type="button"><span class="l-ico" style="color:var(--st-rm)">' + ic("rm") + '</span><span class="l-main"><span class="l-t" style="display:block">' + (g.mrn ? esc(mrnTxt(g.mrn)) : '<span class="faint">No MRN</span>') + '</span>' +
+    '<span class="l-s" style="display:block">' + esc(specLabel(g)) + ' · ' + esc(partyName(S, g.party) || "—") + (g.doc ? ' · inv ' + esc(g.doc) : '') + ' · ' + fmtDayKey(g.date) + '</span></span>' +
+    '<span class="l-r">' + kg(kin) + '<small>' + cs.length + ' ' + plural(cs.length, g.form === "sheet" ? "bundle" : "coil") + (rem < kin - 0.5 ? ' · ' + kg(rem) + ' left' : '') + '</small></span></button>';
+}
+function openGrn(id){
+  pageSheet({title:"RM receipt", hi:"MRN विवरण", render:() => {
+    const S = STATE, g = S.grns.find(x => x.id === id);
+    if (!g) return '<div class="empty">Receipt not found — it may have been cancelled.</div>';
+    const cs = g.coils.map(c => S.coils.get(c)).filter(Boolean), kin = sum(cs, c => c.kg), used = sum(cs, c => c.used), rem = sum(cs, c => c.rem);
+    let h = '<div class="big-id">' + (g.mrn ? esc(g.mrn) : "No MRN") + '</div><div style="font-weight:700;margin:2px 0 12px">' + esc(specLabel(g)) + '</div>' +
+      '<dl class="kv"><dt>Supplier</dt><dd>' + esc(partyName(S, g.party) || "—") + '</dd><dt>Invoice / challan</dt><dd>' + esc(g.doc || "—") + '</dd><dt>Received</dt><dd>' + fmtDayKey(g.date) + '</dd>' +
+      '<dt>Weight in</dt><dd>' + kg(kin) + '</dd><dt>Used</dt><dd>' + kg(used) + '</dd><dt>Balance</dt><dd>' + kg(rem) + '</dd></dl>';
+    h += '<div class="sec-h">' + (g.form === "sheet" ? "Bundles" : "Coils") + ' · कॉइल</div><div class="panel" style="padding:4px 12px">' + (cs.map(c => coilRow(S, c)).join("") || '<div class="empty">None</div>') + '</div>';
+    const lots = new Map(); for (const c of cs) for (const u of c.uses) lots.set(u.lot, (lots.get(u.lot) || 0) + u.kg);
+    h += '<div class="sec-h">Used in lots · किन लॉट में गया</div><div class="panel" style="padding:4px 12px">' + (lots.size ? [...lots].map(([lid, k]) => { const l = S.lots.get(lid);
+      return '<button class="lrow" data-act="lot" data-id="' + esc(lid) + '" type="button"><span class="l-main"><span class="l-t" style="display:block">Lot ' + esc(l ? l.no : lid) + '</span><span class="l-s" style="display:block">' + esc(l ? compLabel(S, l.comp) : "") + (l ? ' · ' + fmtD(l.ts) + ' · ' + (l.disp ? n0(l.disp) + ' dispatched' : l.status === "closed" ? "closed" : "in process") : "") + '</span></span><span class="l-r">' + kg(k) + '</span></button>'; }).join("") : '<div class="empty">Not used yet</div>') + '</div>';
+    return h;
+  }});
 }
 function openCoil(id){
   pageSheet({title:"Coil", hi:"कॉइल विवरण", render:() => {
     const S = STATE, co = S.coils.get(id); if (!co) return '<div class="empty">Coil not found</div>';
     let h = '<div class="big-id">' + esc(co.no) + '</div><div style="font-weight:700;margin:2px 0 12px">' + esc(specLabel(co)) + '</div>' +
-      '<dl class="kv"><dt>Heat no.</dt><dd>' + esc(co.heat || "—") + '</dd><dt>Supplier</dt><dd>' + esc(partyName(S, co.party) || "—") + '</dd><dt>Invoice / challan</dt><dd>' + esc(co.doc || "—") + '</dd><dt>Received</dt><dd>' + fmtDY(co.ts) + '</dd>' +
+      '<dl class="kv"><dt>MRN no.</dt><dd>' + (co.mrn ? '<button class="link" data-act="grn" data-id="' + esc(co.grn) + '" type="button">' + esc(co.mrn) + ' ›</button>' : "—") + '</dd><dt>Heat no.</dt><dd>' + esc(co.heat || "—") + '</dd><dt>Supplier</dt><dd>' + esc(partyName(S, co.party) || "—") + '</dd><dt>Invoice / challan</dt><dd>' + esc(co.doc || "—") + '</dd><dt>Received</dt><dd>' + fmtDY(co.ts) + '</dd>' +
       '<dt>Weight in</dt><dd>' + kg(co.kg) + '</dd><dt>Used</dt><dd>' + kg(co.used) + '</dd><dt>Balance</dt><dd>' + (co.done ? "Finished" + (co.closeKg ? " (" + kg(co.closeKg) + " written off)" : "") : kg(co.rem)) + '</dd></dl>';
     h += '<div class="sec-h">Used in lots · किन लॉट में गई</div><div class="panel" style="padding:4px 12px">' + (co.uses.length ? co.uses.map(u => { const l = S.lots.get(u.lot); return '<button class="lrow" data-act="lot" data-id="' + esc(u.lot) + '" type="button"><span class="l-main"><span class="l-t" style="display:block">Lot ' + esc(l ? l.no : u.lot) + '</span><span class="l-s" style="display:block">' + esc(l ? compLabel(S, l.comp) : "") + ' · ' + fmtD(u.ts) + '</span></span><span class="l-r">' + kg(u.kg) + '</span></button>'; }).join("") : '<div class="empty">Not used yet</div>') + '</div>';
     if (!co.done) h += '<button class="btn btn-danger btn-block" style="margin-top:14px" data-act="coil-close" data-id="' + esc(co.id) + '" type="button">Mark coil finished / returned</button>';
@@ -2269,17 +2356,32 @@ function qtyLine(label, hi, bind, val, o){ return fld(label, hi, inNum(bind, val
 function done(msg){ toast(msg, "ok"); closeTop(); render(); }
 
 /* ---------- 1. RM inward ---------- */
+/* MRN = our Material Receipt Note no. Suggest the next one in the same series (highest no. + 1). */
+function lastMrn(S){ let g0 = null; for (const g of S.grns) if (g.mrn && (!g0 || g.ts > g0.ts)) g0 = g; return g0; }
+function nextMrn(S){
+  const g0 = lastMrn(S); if (!g0) return "";
+  const m = String(g0.mrn).match(/^(.*?)(\d+)(\D*)$/); if (!m) return "";
+  let max = +m[2];
+  for (const g of S.grns){ const x = String(g.mrn || "").match(/^(.*?)(\d+)(\D*)$/); if (x && x[1] === m[1] && x[3] === m[3]) max = Math.max(max, +x[2]); }
+  return m[1] + String(max + 1).padStart(m[2].length, "0") + m[3];
+}
+function mrnTxt(m){ m = String(m || "").trim(); return /^mrn/i.test(m) ? m : "MRN " + m; }
+function mrnDigits(mrn){ const m = String(mrn || "").match(/(\d+)\D*$/); return m ? m[1] : ""; }
 function formRM(){
   const S = STATE;
   const specs = []; const seen = new Set();
   for (const c of S.comps.values()){ if (!c.grade) continue; const k = specKey(c); if (seen.has(k)) continue; seen.add(k); specs.push(c); }
-  const F = {date:dayKey(), party:"", doc:"", form:"coil", grade:"", thk:"", width:"", len:"", n:1, total:"", heat:"", coils:[{no:"", kg:"", heat:""}], auto:true, remark:""};
+  const lm = lastMrn(S);
+  const F = {date:dayKey(), party:"", mrn:nextMrn(S), doc:"", form:"coil", grade:"", thk:"", width:"", len:"", n:1, total:"", heat:"", coils:[{no:"", kg:"", heat:""}], auto:true, remark:""};
+  const coilHint = () => { const d = mrnDigits(F.mrn); return "Leave coil no. empty to auto-number" + (d ? " from the MRN (" + esc(d) + "-1, " + esc(d) + "-2…)" : "") + ". Weights split equally from the total until you edit one."; };
   const resize = () => { const n = clamp(toInt(F.n) || 1, 1, 60); F.n = n; while (F.coils.length < n) F.coils.push({no:"", kg:"", heat:""}); F.coils.length = n; if (F.auto) split(); };
   const split = () => { const t = toNum(F.total); if (t > 0){ const each = Math.round(t / F.coils.length * 10) / 10; F.coils.forEach((c, i) => c.kg = i === F.coils.length - 1 ? String(Math.round((t - each * (F.coils.length - 1)) * 10) / 10) : String(each)); } };
   const unit = () => F.form === "sheet" ? "bundles" : "coils";
   formSheet({title:"RM inward", hi:"कच्चा माल आवक", F,
     body:F => fld("Supplier", "सप्लायर", pf("party", partyName(S, F.party), "", {ph:"Choose supplier"})) +
-      '<div class="frow">' + fld("Invoice / challan no.", "बिल नंबर", inText("doc", F.doc, {cap:true})) + fld("Date", "तारीख", inText("date", F.date, {type:"date"})) + '</div>' +
+      '<div class="frow">' + fld("MRN no.", "एमआरएन नंबर", inText("mrn", F.mrn, {cap:true, ph:"e.g. MRN/26-27/0001"}), {req:true}) + fld("Date", "तारीख", inText("date", F.date, {type:"date"})) + '</div>' +
+      '<div class="hint" style="margin:-8px 0 14px">' + (lm ? "Last: " + esc(lm.mrn) + " · " + fmtDayKey(lm.date) + " — next number filled in. Change it if your MRN register differs." : "Material Receipt Note no. from your MRN register. The next ones are numbered automatically.") + '</div>' +
+      fld("Supplier invoice / challan no.", "बिल नंबर", inText("doc", F.doc, {cap:true})) +
       fld("Material form", "", segc("form", F.form, [{v:"coil", t:"Coil", hi:"कॉइल"}, {v:"sheet", t:"Sheet", hi:"शीट"}, {v:"wire", t:"Wire", hi:"वायर"}])) +
       (specs.length ? '<div class="fld"><div class="lbl">Same spec as a part<span class="hi">पार्ट जैसा</span></div>' + qbtns(specs.slice(0, 8).map((c, i) => ({act:"spec", t:specLabel(c), data:' data-i="' + i + '"'}))) + '</div>' : "") +
       fld("Material grade", "ग्रेड", inText("grade", F.grade, {list:"dl-grades", ph:"e.g. CRCA IS513 CR2"}) + datalist("dl-grades", [...new Set(GRADES.concat([...S.coils.values()].map(c => c.grade)).filter(Boolean))]), {req:true}) +
@@ -2292,29 +2394,34 @@ function formRM(){
       '<div class="fld"><div class="lbl">Each ' + (F.form === "sheet" ? "bundle" : "coil") + '<span class="hi">हर कॉइल का वजन</span></div><div class="coil-rows">' +
       '<div class="cr"><span></span><span class="cr-h">Coil no.</span><span class="cr-h">Weight kg</span><span class="cr-h">Heat no.</span></div>' +
       F.coils.map((c, i) => '<div class="cr"><span class="cr-n">' + (i + 1) + '</span>' + inText("coils." + i + ".no", c.no, {ph:"auto", cap:true}) + inNum("coils." + i + ".kg", c.kg, {dec:true, ph:"kg"}) + inText("coils." + i + ".heat", c.heat, {ph:F.heat || "same", cap:true}) + '</div>').join("") +
-      '</div><div class="hint">Leave coil no. empty to auto-number. Weights split equally from the total until you edit one.</div></div>' +
+      '</div><div class="hint" id="h-coilno">' + coilHint() + '</div></div>' +
       fld("Remarks", "टिप्पणी", inArea("remark", F.remark)),
     changed:(F, b) => {
       if (b === "n"){ resize(); }
       if (b === "total" && F.auto){ split(); F.coils.forEach((c, i) => { const el = $('[data-bind="coils.' + i + '.kg"]', F.el); if (el) el.value = c.kg; }); }
       if (/^coils\.\d+\.kg$/.test(b)) F.auto = false;
       if (b === "heat") F.coils.forEach((c, i) => { const el = $('[data-bind="coils.' + i + '.heat"]', F.el); if (el) el.placeholder = F.heat || "same"; });
+      if (b === "mrn"){ const el = $("#h-coilno", F.el); if (el) el.innerHTML = coilHint(); }
     },
-    summary:F => { const t = sum(F.coils, c => toNum(c.kg)); return t ? "<b>" + F.coils.length + " " + unit() + "</b> · <b>" + kg(t) + "</b>" + (F.grade ? " · " + esc(specLabel(F)) : "") : ""; },
+    summary:F => { const t = sum(F.coils, c => toNum(c.kg)); return t ? (F.mrn.trim() ? "<b>" + esc(mrnTxt(F.mrn)) + "</b> · " : "") + "<b>" + F.coils.length + " " + plural(F.coils.length, F.form === "sheet" ? "bundle" : "coil") + "</b> · <b>" + kg(t) + "</b>" + (F.grade ? " · " + esc(specLabel(F)) : "") : ""; },
     act:{
       party:F => pickParty(["rm"], F.party, v => { F.party = v; F.redraw(); }, "Supplier"),
       n:(F, d) => { F.n = clamp((toInt(F.n) || 1) + (+d.d), 1, 60); resize(); F.redraw(); },
       spec:(F, d) => { const c = specs[+d.i]; Object.assign(F, {form:c.form || "coil", grade:c.grade, thk:String(c.thk || ""), width:String(c.width || ""), len:String(c.len || "")}); F.redraw(); },
     },
-    save:F => {
+    save:async F => {
+      const mrn = F.mrn.trim();
+      if (!mrn) return fail("Enter the MRN number");
       if (!F.grade.trim()) return fail("Enter the material grade");
       if (!(toNum(F.thk) > 0)) return fail(F.form === "wire" ? "Enter wire diameter" : "Enter thickness");
       if (F.form !== "wire" && !(toNum(F.width) > 0)) return fail("Enter width");
       if (F.coils.some(c => !(toNum(c.kg) > 0))) return fail("Enter the weight of every " + (F.form === "sheet" ? "bundle" : "coil"));
-      const base = autoCoilNo();
-      const coils = F.coils.map((c, i) => ({id:uid("c"), no:(c.no || "").trim() || (base + (F.coils.length > 1 ? "-" + (i + 1) : "")), kg:Math.round(toNum(c.kg) * 10) / 10, heat:(c.heat || "").trim() || F.heat.trim()}));
-      addEvent("rm.in", {date:F.date || dayKey(), party:F.party, doc:F.doc.trim(), form:F.form, grade:F.grade.trim(), thk:toNum(F.thk), width:F.form === "wire" ? 0 : toNum(F.width), len:F.form === "sheet" ? toNum(F.len) : 0, coils, remark:F.remark.trim()});
-      done("RM saved · " + coils.length + " " + unit() + " · " + kg(sum(coils, c => c.kg)));
+      const dup = STATE.grns.filter(g => norm(g.mrn) === norm(mrn));
+      if (dup.length && !(await confirmBox("MRN already used", "<b>" + esc(mrnTxt(mrn)) + "</b> is already entered for " + dup.map(g => esc(specLabel(g)) + " (" + fmtDayKey(g.date) + ")").join(", ") + ".<br>Is this another material on the same receipt?", "Yes, same MRN"))) return false;
+      const md = mrnDigits(mrn), base = md || autoCoilNo();
+      const coils = F.coils.map((c, i) => ({id:uid("c"), no:(c.no || "").trim() || (base + (md || F.coils.length > 1 ? "-" + (i + 1) : "")), kg:Math.round(toNum(c.kg) * 10) / 10, heat:(c.heat || "").trim() || F.heat.trim()}));
+      addEvent("rm.in", {date:F.date || dayKey(), party:F.party, mrn, doc:F.doc.trim(), form:F.form, grade:F.grade.trim(), thk:toNum(F.thk), width:F.form === "wire" ? 0 : toNum(F.width), len:F.form === "sheet" ? toNum(F.len) : 0, coils, remark:F.remark.trim()});
+      done("RM saved · " + mrnTxt(mrn) + " · " + coils.length + " " + plural(coils.length, F.form === "sheet" ? "bundle" : "coil") + " · " + kg(sum(coils, c => c.kg)));
     }});
 }
 
@@ -2397,7 +2504,7 @@ function formBlank(pre){
       comp:F => pickComp(F.comp, c => c.route && c.route[0] && c.route[0].kind === "blank", v => { F.comp = v; F.die = (S.comps.get(v).route[0] || {}).die || ""; F.lot = ""; if (F.coil && !coilMatches(coil(), comp())) F.coil = ""; F.redraw(); }, "No parts start with blanking — check routes in More → Parts"),
       coil:F => {
         const c = comp(), list = [...S.coils.values()].filter(x => !x.done && x.rem > 0.05).sort((a, b) => a.ts < b.ts ? -1 : 1);
-        const mk = (x, g) => ({v:x.id, t:x.no + (x.heat ? " · heat " + x.heat : ""), s:specLabel(x) + " · " + kg(x.rem) + " left · " + partyName(S, x.party) + " · " + fmtD(x.ts), g, kw:x.heat});
+        const mk = (x, g) => ({v:x.id, t:x.no + (x.heat ? " · heat " + x.heat : ""), s:specLabel(x) + " · " + kg(x.rem) + " left" + (x.mrn ? " · " + mrnTxt(x.mrn) : "") + " · " + partyName(S, x.party) + " · " + fmtD(x.ts), g, kw:[x.heat, x.mrn, x.doc].join(" ")});
         const m = c ? list.filter(x => coilMatches(x, c)) : [], o = c ? list.filter(x => !coilMatches(x, c)) : list;
         pick({title:"Coil", hi:"कॉइल चुनें — पुरानी पहले", items:m.map(x => mk(x, "Matching " + specLabel(c))).concat(o.map(x => mk(x, c ? "Other material" : "In stock"))), value:F.coil,
           empty:"No coils in stock — record RM inward first", onPick:it => { F.coil = it.v; if (F.coilDone){ F.kg = String(Math.round(coil().rem * 10) / 10); } F.redraw(); }});
@@ -2722,18 +2829,421 @@ function formRwk(pre){
     }});
 }
 
+/* ---------- ★ Production entry — operator reads the stroke counter, the manager types it in ----------
+   One screen for the whole shift: tap a machine, type strokes (or the counter reading) and rejects, save.
+   The machine's setup decides part & operation; the app picks the lot (oldest waiting first) and, for
+   blanking, the coil already on the machine — the manager only types numbers.
+   Saves ordinary "blank" / "op" entries (plus strokes, counter, batch), so everything else works unchanged. */
+function prodSession(now){
+  // in the first hour after a shift change you are usually writing up the shift that just ended
+  const t = new Date((now ? +new Date(now) : Date.now()) - 60 * 60000);
+  const shift = shiftNow(t);
+  if (shift === "C" && t.getHours() < 6) t.setDate(t.getDate() - 1);   // night shift belongs to the day it started
+  return {date:dayKey(t), shift};
+}
+function peSetup(mc, ov){
+  const su = ov || STATE.mc[mc]; if (!su) return null;
+  const c = STATE.comps.get(su.comp); if (!c) return null;
+  const r = (c.route || [])[+su.step]; if (!r || (r.kind !== "blank" && r.kind !== "press")) return null;
+  return {comp:c.id, c, step:+su.step, r, kind:r.kind, die:su.die || r.die || "", ups:Math.max(1, toInt(r.ups) || 1)};
+}
+function peCoils(c){ return [...STATE.coils.values()].filter(x => !x.done && x.rem > 0.05 && coilMatches(x, c)).sort((a, b) => a.ts < b.ts ? -1 : 1); }
+function peAutoCoil(mc, c){
+  const run = STATE.mcRun[mc];
+  if (run && run.comp === c.id && run.coil){ const co = STATE.coils.get(run.coil); if (co && !co.done && co.rem > 0.05) return co; }
+  return peCoils(c)[0] || null;
+}
+function peRunLot(mc, comp){
+  const run = STATE.mcRun[mc];
+  if (!run || run.comp !== comp || Date.now() - new Date(run.ts) > 36 * 36e5) return null;
+  const l = STATE.lots.get(run.lot); return l ? {lot:l, date:run.date} : null;
+}
+function peNewLotNo(){ let n = autoLotNo(), g = 0; while (g++ < 20 && [...STATE.lots.values()].some(l => norm(l.no) === norm(n))) n = autoLotNo(); return n; }
+function peFresh(mc, F){
+  const modes = lsGet("pt-ctr-mode", {}) || {}, last = STATE.mcCtr[mc];
+  return {strokes:"", rej:"", person:STATE.mcOp[mc + "|" + F.shift] || "", cm:modes[mc] === "read" ? "read" : "count",
+    c0:last ? String(last.ctr) : "", c1:"", lotMode:"", lotNo:peNewLotNo(), coil:"", coilDone:false, ov:null};
+}
+function peMachines(F){
+  const out = [], seen = new Set();
+  for (const m of machines()){ const no = String(m.toolNo); if (seen.has(no)) continue; seen.add(no); out.push({no, name:m.toolName || "", m}); }
+  for (const k of Object.keys(STATE.mc).concat(F.extra || [])){ if (!k || seen.has(k)) continue; seen.add(k); out.push({no:k, name:"", m:null}); }
+  return out.sort((a, b) => a.no.localeCompare(b.no, undefined, {numeric:true}));
+}
+
+/* what will be saved for the open machine: pcs, OK, and which lot / coil they go to */
+function pePlan(F){
+  const e = F.e || {}, mc = F.sel;
+  const P = {mc, st:null, block:"", bad:"", err:"", warn:[], lines:[], strokes:0, pcs:0, rej:0, ok:0};
+  if (!mc){ P.err = "Tap a machine first"; return P; }
+  const st = P.st = peSetup(mc, e.ov);
+  if (!st){ P.block = "Choose the part & operation running on " + mc; return P; }
+  if (e.cm === "read"){
+    P.c0 = toInt(e.c0); P.c1 = toInt(e.c1);
+    const has = String(e.c1 == null ? "" : e.c1).trim() !== "";
+    if (!has) P.err = "Enter the counter reading now";
+    else if (P.c1 < P.c0) P.bad = "Counter now is less than the start — was the counter reset? Correct the start reading.";
+    else P.strokes = P.c1 - P.c0;
+  } else P.strokes = toInt(e.strokes);
+  if (P.strokes < 0){ P.bad = "Strokes cannot be negative"; P.strokes = 0; }
+  P.pcs = P.strokes * st.ups;
+  P.rej = Math.max(0, toInt(e.rej));
+  P.ok = P.pcs - P.rej;
+  if (!P.err && !P.bad && P.strokes <= 0) P.err = "Enter the strokes";
+  if (!P.bad && P.pcs > 0 && P.rej > P.pcs) P.bad = "Rejected (" + n0(P.rej) + ") is more than the " + n0(P.pcs) + " pcs made";
+  if (st.kind === "blank") peBlankLines(P, F); else pePressLines(P);
+  return P;
+}
+function pePressLines(P){
+  const S = STATE, st = P.st, i = st.step;
+  const W = lotsWaiting(S, ["press"]).filter(w => w.lot.comp === st.comp && w.i === i);   // oldest lot first
+  P.W = W; P.waiting = sum(W, w => w.qty);
+  const L = []; let left = P.pcs;
+  for (const w of W){ if (left <= 0) break; const q = Math.min(left, w.qty); L.push({lot:w.lot, proc:q}); left -= q; }
+  if (!W.length || left > 0){
+    let tgt = L[L.length - 1];
+    if (!tgt){
+      const lots = [...S.lots.values()].filter(l => l.comp === st.comp && l.route[i] && l.route[i].kind === "press").sort((a, b) => a.ts < b.ts ? 1 : -1);
+      const lt = lots.find(l => l.calc[i] && l.calc[i].input > 0) || lots[0];
+      if (lt) L.push(tgt = {lot:lt, proc:0});
+    }
+    if (!tgt){ P.block = "No lot of " + st.c.partNo + " has reached " + st.r.op + " yet — enter its blanking first, or change the part."; return; }
+    if (left > 0){
+      tgt.proc += left; P.over = left;
+      P.overMsg = (P.waiting ? "Only " + n0(P.waiting) + " pcs of " + st.c.partNo + " are waiting for " + st.r.op + ". The extra " + n0(left) : "No " + st.c.partNo + " is waiting for " + st.r.op + ". These " + n0(left)) + " go on lot " + tgt.lot.no +
+        ", which will show “Check qty” until the " + stepName(tgt.lot, i - 1) + " entry for them is added.";
+      P.warn.push(P.overMsg);
+    }
+  }
+  let rj = P.rej;
+  for (const l of L){ l.rej = Math.min(rj, l.proc); rj -= l.rej; l.ok = l.proc - l.rej; }
+  P.lines = L;
+}
+function peBlankLines(P, F){
+  const S = STATE, e = F.e, st = P.st, c = st.c;
+  const run = peRunLot(P.mc, c.id);
+  P.run = run ? run.lot : null;
+  const mode = e.lotMode || (run && run.date === F.date ? "cont" : "new");    // same production day → same lot
+  P.lotMode = mode === "cont" && run ? "cont" : "new";
+  if (P.lotMode === "cont") P.lotNo = run.lot.no;
+  else {
+    P.lotNo = String(e.lotNo || "").trim();
+    if (!P.lotNo) P.bad = P.bad || "Enter the new lot number";
+    else if ([...S.lots.values()].some(l => norm(l.no) === norm(P.lotNo))) P.bad = P.bad || "Lot " + P.lotNo + " already exists — use “Same lot” or another number";
+  }
+  let co = e.coil ? S.coils.get(e.coil) : null;
+  if (!co || co.done || co.rem <= 0.05) co = peAutoCoil(P.mc, c);
+  P.coil = co;
+  const wt = +c.wt || 0, need = wt > 0 ? Math.round(P.pcs * wt * 10) / 10 : 0;
+  P.kg = need; P.wt = wt;
+  const L = [];
+  if (!co){
+    L.push({coil:"", kg:need, done:false});
+    P.warn.push(c.grade ? "No " + specLabel(c) + " coil in stock — this saves without a coil, so the lot can’t be traced to a heat no. / MRN. Record the RM inward first if you can."
+      : "RM spec is not set on part " + c.partNo + ", so the coil can’t be picked automatically — choose it below.");
+  } else {
+    if (!coilMatches(co, c)) P.warn.push("Coil " + co.no + " is " + specLabel(co) + " but " + c.partNo + " needs " + specLabel(c) + ".");
+    if (e.coilDone || need > co.rem + 0.5){
+      // coil runs out: finish it, take the rest from the next coil of the same spec (oldest first)
+      L.push({coil:co.id, co, kg:Math.round(co.rem * 10) / 10, done:true});
+      const rest = Math.round((need - co.rem) * 10) / 10;
+      if (rest > 0.5){
+        const nx = peCoils(c).find(x => x.id !== co.id);
+        if (nx){ const big = rest > nx.rem + 0.5; L.push({coil:nx.id, co:nx, kg:big ? Math.round(nx.rem * 10) / 10 : rest, done:big});
+          if (big) P.warn.push("Needs " + kg(need) + " — more than both coils hold. Check the kg/pc set on the part."); }
+        else P.warn.push("Coil " + co.no + " has only " + kg(co.rem) + " left (this needs " + kg(need) + ") and there is no other " + specLabel(c) + " coil in stock. Record RM inward for the next coil.");
+      }
+    } else L.push({coil:co.id, co, kg:need, done:false});
+  }
+  const tk = sum(L, l => l.kg), okT = Math.max(0, P.ok);
+  let okL = okT, rjL = P.rej;
+  L.forEach((l, i) => {
+    const last = i === L.length - 1, sh = tk > 0 ? l.kg / tk : (i === 0 ? 1 : 0);
+    l.ok = last ? okL : Math.round(okT * sh); l.rej = last ? rjL : Math.round(P.rej * sh);
+    okL -= l.ok; rjL -= l.rej;
+  });
+  P.lines = L;
+}
+function peAvg(mc){
+  const S = STATE, v = [];
+  for (let i = S.log.length - 1; i >= 0 && v.length < 12; i--){
+    const e = S.log[i], d = e.d || {};
+    if ((e.type !== "blank" && e.type !== "op") || d.mc !== mc || isVoid(S, e)) continue;
+    if (d.batch && !d.strokes) continue;
+    v.push(d.strokes ? N(d.strokes) * (N(d.ups) || 1) : N(d.ok) + N(d.rej));
+  }
+  return v.length >= 3 ? sum(v) / v.length : 0;
+}
+
+/* the shift register: everything entered for one date + shift, one row per entry (split lines grouped) */
+function peRegister(date, shift){
+  const S = STATE, g = new Map();
+  for (const e of S.log){
+    if ((e.type !== "blank" && e.type !== "op") || isVoid(S, e)) continue;
+    const d = e.d || {};
+    if (evDay(e) !== date || (d.shift || "") !== shift) continue;
+    const k = d.batch || e.id;
+    let r = g.get(k);
+    if (!r) g.set(k, r = {k, ids:[], ts:e.ts, mc:d.mc || "", lot:d.lot, step:e.type === "blank" ? 0 : N(d.step), type:e.type, person:d.person || "", strokes:0, ups:N(d.ups) || 1, ctr:d.ctr, ok:0, rej:0, dev:e.dev});
+    r.ids.push(e.id); r.ok += N(d.ok); r.rej += N(d.rej); if (d.strokes) r.strokes += N(d.strokes);
+  }
+  return [...g.values()].sort((a, b) => a.ts < b.ts ? 1 : -1);
+}
+function peByMc(reg){ const m = new Map(); for (const r of reg){ if (!r.mc) continue; const t = m.get(r.mc) || {pcs:0, n:0}; t.pcs += r.ok + r.rej; t.n++; m.set(r.mc, t); } return m; }
+function peStatHtml(t){ return t ? '<span class="badge b-ok">✓ ' + n0(t.pcs) + '</span>' + (t.n > 1 ? '<small>' + t.n + ' entries</small>' : '<small>pcs</small>') : '<small>—</small>'; }
+function peRecent(r){ return r.dev === deviceId() && Date.now() - new Date(r.ts) < 20 * 60e3; }
+function peRegHtml(F, reg){
+  if (!reg.length) return '<div class="empty" style="padding:18px">Nothing entered for this shift yet.<span class="hi">इस शिफ्ट की कोई एंट्री नहीं</span></div>';
+  const S = STATE, tot = sum(reg, r => r.ok + r.rej), rej = sum(reg, r => r.rej);
+  return '<div class="hint" style="margin:-2px 2px 8px">' + reg.length + ' ' + plural(reg.length, "entry", "entries") + ' · <b>' + n0(tot) + '</b> pcs · ' + n0(rej) + ' rejected' + (tot ? ' (' + fmtPct(pct(rej, tot), 1) + ')' : '') + '</div>' +
+    '<div class="panel" style="padding:2px 10px">' + reg.map(r => {
+      const lot = S.lots.get(r.lot), op = lot ? stepName(lot, r.step) : "", pn = lot ? compPN(S, lot.comp) : "";
+      return '<div class="reg-r"><button type="button" class="lrow" data-act="ev" data-id="' + esc(r.ids[0]) + '"><span class="l-ico">' + ic(r.type === "blank" ? "blank" : "press") + '</span><span class="l-main"><span class="l-t" style="display:block">' + esc(r.mc || "—") + ' · ' + esc(pn) + ' <span class="hi" style="font-size:12px">' + esc(op) + '</span></span>' +
+        '<span class="l-s" style="display:block">' + fmtT(r.ts) + (r.person ? ' · ' + esc(r.person) : '') + (r.strokes ? ' · ' + n0(r.strokes) + ' strokes' + (r.ups > 1 ? ' × ' + r.ups : '') : '') + (r.ctr != null && r.ctr !== "" ? ' · counter ' + n0(r.ctr) : '') + (lot ? ' · lot ' + esc(lot.no) : '') + (r.ids.length > 1 ? ' +' + (r.ids.length - 1) : '') + '</span></span>' +
+        '<span class="l-r">' + n0(r.ok) + '<small>OK' + (r.rej ? ' · ' + n0(r.rej) + ' rej' : '') + '</small></span></button>' +
+        (r.type === "op" && r.ids.length === 1 ? '<button type="button" class="reg-undo" data-act="ev-edit" data-id="' + esc(r.ids[0]) + '">Edit</button>' : '') +
+        '<button type="button" class="reg-undo" data-fa="undo" data-k="' + esc(r.k) + '">' + (peRecent(r) ? "Undo" : "Delete") + '</button></div>';
+    }).join("") + '</div>';
+}
+
+function peCalcHtml(P){
+  const st = P.st; if (!st) return "";
+  let h = "";
+  if (P.pcs > 0) h += '<div><span class="pe-big">' + n0(P.pcs) + '</span> pcs' +
+    (st.ups > 1 ? ' <span class="faint">= ' + n0(P.strokes) + ' strokes × ' + st.ups + '</span>' : P.c1 != null ? ' <span class="faint">= ' + n0(P.c1) + ' − ' + n0(P.c0) + '</span>' : '') +
+    ' · OK <b>' + n0(Math.max(0, P.ok)) + '</b>' + (P.rej ? ' · rej <b>' + n0(P.rej) + '</b> <span class="faint">(' + fmtPct(pct(P.rej, P.pcs), 1) + ')</span>' : '') + '</div>';
+  if (st.kind === "press"){
+    if (P.pcs > 0 && P.lines.length) h += '<div>→ ' + P.lines.map(l => 'lot <b>' + esc(l.lot.no) + '</b> ' + n0(l.proc)).join(' + ') + (P.over ? '' : ' <span class="faint">· ' + n0(Math.max(0, P.waiting - P.pcs)) + ' still waiting</span>') + '</div>';
+    else if (P.W && P.W.length) h += '<div>Waiting for ' + esc(st.r.op) + ': <b>' + n0(P.waiting) + '</b> pcs in ' + P.W.length + ' ' + plural(P.W.length, "lot") + ' · oldest lot ' + esc(P.W[0].lot.no) + ' goes first</div>';
+    else if (!P.block) h += '<div>Nothing is waiting for ' + esc(st.r.op) + ' right now.</div>';
+  } else {
+    const cl = P.lines.filter(l => l.coil);
+    h += '<div>→ ' + (P.lotMode === "new" ? 'new lot <b>' + esc(P.lotNo || "?") + '</b>' : 'lot <b>' + esc(P.lotNo) + '</b>') +
+      (cl.length ? ' · ' + cl.map(l => 'coil ' + esc(l.co.no) + (l.kg ? ' <b>' + kg(l.kg) + '</b>' : '') + (l.done ? ' (finished)' : '')).join(' + ') : '') + '</div>';
+    if (P.coil && P.kg > 0 && cl.length === 1 && !cl[0].done) h += '<div class="faint">Coil ' + esc(P.coil.no) + ': ' + kg(P.coil.rem) + ' → ' + kg(Math.max(0, P.coil.rem - P.kg)) + ' left after this</div>';
+    if (!P.wt) h += '<div class="faint">Set kg per piece on the part to track coil balance.</div>';
+  }
+  for (const w of P.warn) h += '<div class="hint warn" style="margin:6px 0 0">⚠ ' + esc(w) + '</div>';
+  if (P.bad) h += '<div class="hint bad" style="margin:6px 0 0">' + esc(P.bad) + '</div>';
+  return h || '<div class="faint">Type the strokes the operator tells you</div>';
+}
+function peEntryHtml(F, x, st){
+  const S = STATE, e = F.e, P = pePlan(F);
+  // part / route / die, with the button to change what is running (shown at the bottom; on top when nothing is set)
+  let setup = '<div class="pe-set">';
+  if (st){
+    const dd = st.die ? dieByNo(st.die) : null, dpm = dd ? toolPM(dd) : null;
+    setup += '<div><div style="font-size:13.5px;font-weight:800">' + esc(st.c.partNo) + ' <span class="hi" style="font-size:12.5px">' + esc(st.c.name || "") + '</span></div><div style="margin-top:6px">' + routeStrip(st.c.route, st.step) + '</div>' +
+      (st.die || st.ups > 1 ? '<div class="hint" style="margin-top:6px">' + [st.die ? "Die " + esc(st.die) + (dpm && dpm.code !== "ok" ? " · " + dieHint(st.die) : "") : "", st.ups > 1 ? st.ups + " pcs per stroke" : ""].filter(Boolean).join(" · ") + '</div>' : '') + '</div>';
+  } else setup += '<div class="hint warn" style="margin:0">Which part is running on ' + esc(x.no) + '?</div>';
+  setup += '<button type="button" class="btn btn-sm" data-fa="chg">' + (st ? "Change part" : "Choose part") + '</button></div>';
+  let h = '<div class="pe-in">';
+  if (!st) return h + setup + '</div>';
+  if (P.block) return h + setup + '<div class="hint bad" style="margin:0 0 4px">' + esc(P.block) + '</div></div>';
+  h += '<div style="height:12px"></div>';
+  const prev = peRegister(F.date, F.shift).filter(r => r.mc === x.no);
+  if (prev.length) h += '<div class="pe-prev" style="margin-top:-2px">Already entered this shift: ' + prev.map(r => n0(r.ok + r.rej) + ' pcs at ' + fmtT(r.ts) + (r.person ? ' (' + esc(r.person) + ')' : '')).join(', ') + '</div>';
+  if (e.cm === "read"){
+    const last = S.mcCtr[x.no];
+    h += '<div class="pe-q three">' + fld("Counter start", "शुरू", inNum("e.c0", e.c0, {big:true, ent:"next"})) + fld("Counter now", "अभी", inNum("e.c1", e.c1, {big:true, ent:"next"}), {req:true}) + fld("Rejected", "रिजेक्ट", inNum("e.rej", e.rej, {big:true, ent:"done"})) + '</div>' +
+      '<div class="hint" style="margin:-8px 0 12px">' + (last ? "Start = last reading " + n0(last.ctr) + " (" + fmtDT(last.ts) + "). Change it if the counter was reset." : "First reading on this machine — enter the counter at the start of the shift.") + '</div>';
+  } else h += '<div class="pe-q">' + fld("Strokes", "स्ट्रोक", inNum("e.strokes", e.strokes, {big:true, ent:"next"}), {req:true}) + fld("Rejected pcs", "रिजेक्ट", inNum("e.rej", e.rej, {big:true, ent:"done"})) + '</div>';
+  h += '<div class="pe-calc" id="pe-calc">' + peCalcHtml(P) + '</div>';
+  h += fld("Operator", "ऑपरेटर", inText("e.person", e.person, {list:"dl-pe-op", ph:"Name", ent:"done"}) + datalist("dl-pe-op", namesFor("op")));
+  if (st.kind === "blank"){
+    h += '<div class="box"><div class="box-h">Lot & coil · लॉट व कॉइल</div>' +
+      (P.run ? segc("e.lotMode", P.lotMode, [{v:"cont", t:"Same lot", hi:P.run.no}, {v:"new", t:"New lot", hi:"नया लॉट"}]) : "") +
+      (P.lotMode === "new" ? fld("New lot no.", "जॉब कार्ड पर लिखें", inText("e.lotNo", e.lotNo, {cap:true})) :
+        '<div class="hint" style="margin:-4px 0 12px">Lot ' + esc(P.run.no) + ' · started ' + fmtDT(P.run.ts) + ' · ' + n0(P.run.steps[0] ? P.run.steps[0].ok : 0) + ' blanked so far</div>') +
+      fld("Coil on the machine", "कौन सी कॉइल", pf("coil", P.coil ? "Coil " + P.coil.no + (P.coil.heat ? " · heat " + P.coil.heat : "") : "",
+        P.coil ? esc(specLabel(P.coil)) + (P.coil.mrn ? " · " + esc(mrnTxt(P.coil.mrn)) : "") + " · balance " + kg(P.coil.rem) : "No matching coil in stock", {ph:"Choose coil"})) +
+      '<label class="chk" style="padding-top:0"><input type="checkbox" data-bind="e.coilDone" ' + (e.coilDone ? "checked" : "") + '> Coil finished this shift (balance written off)</label></div>';
+  }
+  h += '<div style="border-top:1px solid var(--line);margin:0 -12px;padding:0 12px">' + setup + '</div>';
+  h += '<button type="button" class="link" style="font-size:12.5px" data-fa="cm">' + (e.cm === "read" ? "Operator tells the stroke count instead? Switch back" : "Operator gives the counter reading instead? Switch") + '</button>';
+  return h + '</div>';
+}
+function peRow(F, x, t){
+  const on = F.sel === x.no, st = peSetup(x.no, on && F.e ? F.e.ov : null), down = x.m && x.m.openBreakdownId;
+  const sub = st ? esc(st.c.partNo) + ' · ' + esc(st.r.op) + (st.die ? ' <span class="faint" style="font-weight:600">· die ' + esc(st.die) + '</span>' : '') : '<span class="faint" style="font-weight:600">No part set — tap to choose</span>';
+  const kw = norm([x.no, x.name, st ? st.c.partNo + " " + st.c.name + " " + st.r.op : ""].join(" "));
+  return '<div class="mrow' + (on ? " on" : "") + (!on && F.justSaved === x.no ? " just" : "") + '" data-k="' + esc(kw) + '">' +
+    '<button type="button" class="mrow-h" data-fa="sel" data-mc="' + esc(x.no) + '" aria-expanded="' + on + '"><span class="mrow-no">' + esc(x.no) + '</span><span class="mrow-main"><span class="mrow-t">' + esc(x.name || "Machine") +
+    (down ? ' · <span style="color:#f08a7c">down in PM Tracker</span>' : '') + '</span><span class="mrow-s">' + sub + '</span></span><span class="pe-stat" data-pe-stat="' + esc(x.no) + '">' + peStatHtml(t) + '</span></button>' +
+    (on ? peEntryHtml(F, x, st) : '') + '</div>';
+}
+function peBody(F){
+  const ms = peMachines(F), reg = peRegister(F.date, F.shift), by = peByMc(reg);
+  F._msig = ms.map(x => x.no).join("|");
+  let h = '<div class="pe-sess">' + fld("Production date", "तारीख", inText("date", F.date, {type:"date"})) +
+    fld("Shift", "शिफ्ट", segc("shift", F.shift, [{v:"A", t:"A", hi:"6–2"}, {v:"B", t:"B", hi:"2–10"}, {v:"C", t:"C", hi:"10–6"}])) + '</div>';
+  h += '<div class="hint" style="margin:0 2px 12px">Tap the machine → type the strokes the operator tells you → <b>⏎</b> rejects → <b>⏎</b> saves. Part, lot and coil come from the machine’s setup.<br><span class="faint">मशीन चुनें → स्ट्रोक लिखें → सेव करें</span></div>';
+  if (ms.length > 8) h += '<label class="search"><span class="sr">Find machine</span>' + ic("search") + '<input type="search" id="peQ" placeholder="Machine no. or part" value="' + esc(F.q || "") + '" autocomplete="off"></label>';
+  if (!ms.length) h += '<div class="empty">No machines yet.<span class="hi">' + (TOOLS.err && !isDemo() ? "PM Tracker not reachable: " + esc(TOOLS.err) : "Machines come from your PM Tracker") + '</span></div>';
+  h += ms.map(x => peRow(F, x, by.get(x.no))).join("");
+  h += '<button type="button" class="btn btn-sm btn-ghost" data-fa="addmc" style="margin:2px 0 6px">' + ic("plus") + 'Machine not in the list</button>';
+  h += '<div class="sec-h">Entered for ' + fmtDayKey(F.date) + ' · shift ' + esc(F.shift) + '</div><div id="pe-reg">' + peRegHtml(F, reg) + '</div>';
+  return h;
+}
+function peFilter(F){
+  const q = norm(F.q);
+  $$(".mrow", F.el).forEach(r => { r.style.display = !q || r.classList.contains("on") || (r.dataset.k || "").includes(q) ? "" : "none"; });
+}
+function peFocus(F){
+  if (!F.e) return;
+  const card = $(".mrow.on", F.el), i = $(F.e.cm === "read" ? '[data-bind="e.c1"]' : '[data-bind="e.strokes"]', F.el);
+  if (card) try { card.scrollIntoView({block:"start"}); } catch (x) {}
+  if (i) try { i.focus({preventScroll:true}); } catch (x) { i.focus(); }
+  if (i) try { i.select(); } catch (x) {}     // typing replaces what is there
+}
+function peChg(F){
+  const mc = F.sel; if (!mc) return;
+  const st = peSetup(mc, F.e && F.e.ov);
+  pickComp(st ? st.comp : "", c => (c.route || []).some(r => r.kind === "blank" || r.kind === "press"), v => {
+    const c = STATE.comps.get(v); if (!c) return;
+    const steps = c.route.map((r, i) => ({r, i})).filter(x => x.r.kind === "blank" || x.r.kind === "press");
+    const set = x => { if (F.sel !== mc) return; if (!F.e) F.e = peFresh(mc, F);
+      Object.assign(F.e, {ov:{comp:v, step:x.i, die:x.r.die || ""}, lotMode:"", coil:"", coilDone:false}); F.redraw(); peFocus(F); };
+    if (steps.length === 1) return set(steps[0]);
+    pick({title:"Operation on " + mc, hi:"कौन सा ऑपरेशन चल रहा है", value:st && st.comp === v ? String(st.step) : "",
+      items:steps.map(x => ({v:String(x.i), t:(x.i + 1) + ". " + x.r.op, s:[x.r.kind === "blank" ? "from coil — makes the lot" : "", x.r.die ? "die " + x.r.die : "", toInt(x.r.ups) > 1 ? x.r.ups + " pcs/stroke" : ""].filter(Boolean).join(" · "), x})),
+      onPick:it => set(it.x)});
+  });
+}
+function pePickCoil(F){
+  const P = pePlan(F); if (!P.st) return; const c = P.st.c;
+  const list = [...STATE.coils.values()].filter(x => !x.done && x.rem > 0.05).sort((a, b) => a.ts < b.ts ? -1 : 1);
+  const mk = (x, g) => ({v:x.id, t:x.no + (x.heat ? " · heat " + x.heat : ""), s:specLabel(x) + " · " + kg(x.rem) + " left" + (x.mrn ? " · " + mrnTxt(x.mrn) : "") + " · " + fmtD(x.ts), g, kw:[x.heat, x.mrn, x.doc].join(" ")});
+  pick({title:"Coil on " + F.sel, hi:"कॉइल चुनें — पुरानी पहले", value:P.coil ? P.coil.id : "", search:true,
+    items:list.filter(x => coilMatches(x, c)).map(x => mk(x, "Matching " + specLabel(c))).concat(list.filter(x => !coilMatches(x, c)).map(x => mk(x, "Other material"))),
+    empty:"No coils in stock — record RM inward first", onPick:it => { if (F.e){ F.e.coil = it.v; F.redraw(); } }});
+}
+async function peSave(F){
+  const P = pePlan(F), msg = P.block || P.bad || P.err;
+  if (msg) return fail(msg);
+  if (!P.lines.length) return fail("Nothing to save");
+  const S = STATE, e = F.e, st = P.st, mc = P.mc;
+  const avg = peAvg(mc);
+  if (avg > 0 && P.pcs > 500 && P.pcs > avg * 3 && !(await confirmBox("Check the number", "<b>" + n0(P.pcs) + "</b> pcs is more than 3× the usual for " + esc(mc) + " (about " + n0(avg) + " pcs per entry). Save it?", "Yes, save"))) return false;
+  const prev = peRegister(F.date, F.shift).filter(r => r.mc === mc);
+  if (prev.length && !(await confirmBox("Already entered for this shift", esc(mc) + " already has " + prev.map(r => "<b>" + n0(r.ok + r.rej) + "</b> pcs at " + fmtT(r.ts) + (r.person ? " (" + esc(r.person) + ")" : "")).join(", ") +
+    " for shift " + esc(F.shift) + ", " + fmtDayKey(F.date) + ".<br>Add <b>" + n0(P.pcs) + "</b> pcs more?", "Add more"))) return false;
+  if (P.over && !(await confirmBox("More than waiting", esc(P.overMsg), "Save anyway"))) return false;
+  // record the setup if the manager changed the part / operation here
+  const cur = S.mc[mc], ov = e.ov;
+  if (ov && !(cur && cur.comp === ov.comp && +cur.step === +ov.step)) addEvent("setup", {mc, die:st.die, comp:ov.comp, step:+ov.step, opName:st.r.op, person:"", remark:"Set from production entry"});
+  const base = {mc, die:st.die, person:String(e.person || "").trim(), shift:F.shift, date:F.date, src:"pe", batch:uid("b")};
+  const meta = {strokes:P.strokes, ups:st.ups}; if (e.cm === "read"){ meta.ctr0 = P.c0; meta.ctr = P.c1; }
+  let n = 0;
+  if (st.kind === "blank"){
+    const newLot = P.lotMode === "new", lotId = newLot ? uid("l") : P.run.id;
+    for (const l of P.lines){
+      if (!l.ok && !l.rej && !l.kg && !l.done) continue;
+      const first = n++ === 0;
+      addEvent("blank", Object.assign({lot:lotId, lotNo:P.lotNo, newLot:newLot && first, route:newLot && first ? st.c.route : undefined, comp:st.comp, coil:l.coil, kg:l.kg, coilDone:!!l.done, ok:l.ok, rej:l.rej}, base, first ? meta : {}));
+    }
+  } else {
+    for (const l of P.lines){ const first = n++ === 0; addEvent("op", Object.assign({lot:l.lot.id, step:st.step, ok:l.ok, rej:l.rej, rwk:0}, base, first ? meta : {})); }
+  }
+  if (!n) return fail("Nothing to save");
+  if (base.person) rememberName("op", base.person);
+  toast(mc + " saved · " + n0(Math.max(0, P.ok)) + " OK" + (P.rej ? " · " + n0(P.rej) + " rej" : "") + (st.kind === "blank" ? " · lot " + P.lotNo : ""), "ok");
+  F.justSaved = mc; F.sel = ""; F.e = null;
+  render(); F.redraw();
+  return true;
+}
+async function peUndo(F, k){
+  const S = STATE, r = peRegister(F.date, F.shift).find(x => x.k === k); if (!r) return;
+  const evs = r.ids.map(id => S.evById.get(id)).filter(Boolean);
+  for (const lid of evs.filter(e => e.type === "blank" && e.d && e.d.newLot).map(e => e.d.lot)){
+    const deps = S.log.filter(x => !r.ids.includes(x.id) && !isVoid(S, x) && evTouchesLot(x, lid));
+    if (deps.length) return confirmBox("Cancel later entries first", "Lot " + esc((S.lots.get(lid) || {}).no || "") + " already has " + deps.length + " later " + plural(deps.length, "entry", "entries") + " (for example the next operation). Cancel those first, newest first.", "OK");
+  }
+  const label = (r.mc || "Entry") + " · " + n0(r.ok + r.rej) + " pcs at " + fmtT(r.ts) + (r.person ? " · " + r.person : "");
+  let reason = "Undo — wrong entry";
+  if (!(await needPin((peRecent(r) ? "Undo: " : "Delete: ") + label))) return;
+  if (peRecent(r)){
+    if (!(await confirmBox("Undo this entry?", esc(label) + "<br>It stays in the activity log, marked cancelled.", "Undo", true))) return;
+  } else {
+    const v = await dialog({title:"Reason for deleting", msg:"The entry stays in the activity log, marked cancelled.", input:{ph:"e.g. wrong quantity, entered twice"}, ok:"Delete entry", danger:true});
+    if (v == null) return; reason = v.trim() || reason;
+  }
+  for (const id of r.ids.slice().reverse()) addEvent("void", {ref:id, reason});
+  toast("Entry deleted", "ok"); render(); F.redraw();
+}
+function formProd(pre){
+  pre = pre || {};
+  const s0 = prodSession();
+  const F = {date:s0.date, shift:s0.shift, sel:"", e:null, justSaved:"", extra:[], q:""};
+  const sel = mc => { F.sel = mc; F.e = peFresh(mc, F); F.justSaved = ""; F.redraw(); if (peSetup(mc)) peFocus(F); else setTimeout(() => peChg(F), 60); };
+  formSheet({title:"Production entry", hi:"ऑपरेटर का प्रोडक्शन — स्ट्रोक काउंटर से", F, cls:"pe",
+    saveLabel:F => "Save " + F.sel + " · सेव करें",
+    noSave:F => !F.sel,
+    body:peBody,
+    changed:(F, b, el, struct) => {
+      if (b === "date"){ if (struct && /^\d{4}-\d{2}-\d{2}$/.test(F.date)){ F.sel = ""; F.e = null; F.redraw(); } return; }
+      if (b === "shift"){ F.sel = ""; F.e = null; return; }       // the segmented control redraws by itself
+      if (b === "e.lotMode") return;
+      if (b === "e.coilDone"){ if (struct) F.redraw(); return; }
+      const c = $("#pe-calc", F.el); if (c) c.innerHTML = peCalcHtml(pePlan(F));
+    },
+    summary:F => {
+      if (!F.sel){ const n = peByMc(peRegister(F.date, F.shift)).size; return "<b>" + n + "</b> " + plural(n, "machine") + " entered · shift " + esc(F.shift) + " · " + fmtDayKey(F.date); }
+      const P = pePlan(F);
+      return P.pcs > 0 ? "<b>" + esc(F.sel) + "</b> · " + n0(P.pcs) + " pcs · OK <b>" + n0(Math.max(0, P.ok)) + "</b>" + (P.rej ? " · rej " + n0(P.rej) : "") : "<b>" + esc(F.sel) + "</b> · type the strokes";
+    },
+    act:{
+      sel:(F, d) => { if (F.sel === d.mc){ F.sel = ""; F.e = null; F.redraw(); return; } sel(d.mc); },
+      chg:F => peChg(F),
+      coil:F => pePickCoil(F),
+      cm:F => { const e = F.e; if (!e) return; e.cm = e.cm === "read" ? "count" : "read";
+        const m = lsGet("pt-ctr-mode", {}) || {}; m[F.sel] = e.cm; lsSet("pt-ctr-mode", m);
+        if (e.cm === "read" && !e.c0){ const l = STATE.mcCtr[F.sel]; if (l) e.c0 = String(l.ctr); }
+        F.redraw(); peFocus(F); },
+      addmc:async F => { const v = await dialog({title:"Machine no.", msg:"For a machine that is not in the PM Tracker list.", input:{ph:"e.g. PM-07"}, ok:"Add"}); const k = (v || "").trim(); if (!k) return; if (!F.extra.includes(k)) F.extra.push(k); sel(k); },
+      undo:(F, d) => peUndo(F, d.k),
+    },
+    save:F => peSave(F),
+    mounted:F => {
+      // ⏎ moves strokes → rejects → save, so the manager never has to reach for the button
+      F.el.addEventListener("keydown", ev => {
+        if (ev.key !== "Enter" || !F.e) return;
+        const b = ev.target && ev.target.dataset ? ev.target.dataset.bind : ""; if (!b) return;
+        const order = F.e.cm === "read" ? ["e.c0", "e.c1", "e.rej"] : ["e.strokes", "e.rej"], i = order.indexOf(b);
+        if (i < 0 && b !== "e.person") return;
+        ev.preventDefault();
+        if (i >= 0 && i < order.length - 1){ const nx = $('[data-bind="' + order[i + 1] + '"]', F.el); if (nx){ nx.focus(); try { nx.select(); } catch (x) {} } return; }
+        const sv = $('[data-fa="save"]', F.el); if (sv){ ev.target.blur(); sv.click(); }
+      });
+      F.el.addEventListener("input", ev => { if (ev.target && ev.target.id === "peQ"){ F.q = ev.target.value; peFilter(F); } });
+      // after a sync: refresh the register and counts without touching what is being typed
+      F.el._refresh = () => {
+        if (!F.sel && peMachines(F).map(x => x.no).join("|") !== F._msig){ F.redraw(); return; }
+        const reg = peRegister(F.date, F.shift), by = peByMc(reg);
+        const box = $("#pe-reg", F.el); if (box) box.innerHTML = peRegHtml(F, reg);
+        $$("[data-pe-stat]", F.el).forEach(s => { s.innerHTML = peStatHtml(by.get(s.dataset.peStat)); });
+        const c = $("#pe-calc", F.el); if (c) c.innerHTML = peCalcHtml(pePlan(F));
+        F.refoot();
+      };
+    }});
+  const r0 = F.redraw; F.redraw = () => { r0(); peFilter(F); };
+  if (pre.mc) sel(String(pre.mc));
+}
+
 /* ---------- entry menu & router ---------- */
 function openEntryMenu(){
   pageSheet({title:"New entry", hi:"नई एंट्री — प्रक्रिया के क्रम में", render:() =>
-    '<div class="entry-grid">' + ENTRIES.map(e => '<button class="entry ' + (e.f === "rwk" ? "wide" : "") + '" data-act="new" data-f="' + e.f + '" data-replace="1" type="button"><span class="e-n">' + e.n + '</span><span class="e-ico" style="color:' + e.c + '">' + ic(e.ic) + '</span><span><span class="e-t" style="display:block">' + e.t + '</span><span class="e-hi">' + e.hi + '</span></span></button>').join("") + '</div>' +
-    '<div class="hint" style="margin-top:14px;text-align:center">Numbers follow the shop-floor flow: RM → setup → blanking → operations → outside → inspection → dispatch</div>'});
+    '<div class="entry-grid">' + ENTRIES.map(e => e.feat ?
+      '<button class="entry wide feat" data-act="new" data-f="' + e.f + '" data-replace="1" type="button"><span class="e-ico">' + ic(e.ic) + '</span><span><span class="e-t" style="display:block">' + e.t + '</span><span class="e-hi">' + e.hi + '</span><span class="e-sub">' + esc(e.sub || "") + '</span></span></button>' :
+      '<button class="entry ' + (e.f === "rwk" ? "wide" : "") + '" data-act="new" data-f="' + e.f + '" data-replace="1" type="button"><span class="e-n">' + e.n + '</span><span class="e-ico" style="color:' + e.c + '">' + ic(e.ic) + '</span><span><span class="e-t" style="display:block">' + e.t + '</span><span class="e-hi">' + e.hi + '</span></span></button>').join("") + '</div>' +
+    '<div class="hint" style="margin-top:14px;text-align:center">Numbers follow the shop-floor flow: RM → setup → blanking → operations → outside → inspection → dispatch.<br>Use the numbered Blanking / Press operation forms only for special cases (rework hold, a specific lot or coil).</div>'});
 }
 function openForm(f, pre){
   if (!STATE.comps.size && f !== "rm" && !isDemo()){
     confirmBox("Set up parts first", "Add your parts and their routes (More → Parts) so the app knows each part’s steps. You can import part numbers from your PM Tracker dies.", "Open parts").then(y => { if (y) openMore("parts"); });
     return;
   }
-  ({rm:formRM, setup:formSetup, blank:formBlank, op:formOp, send:formSend, recv:formRecv, insp:formInsp, disp:formDisp, rwk:formRwk}[f] || formRM)(pre || {});
+  ({prod:formProd, rm:formRM, setup:formSetup, blank:formBlank, op:formOp, send:formSend, recv:formRecv, insp:formInsp, disp:formDisp, rwk:formRwk}[f] || formRM)(pre || {});
 }
 
 /* ---- 09-masters.js ---- */
@@ -2818,8 +3328,10 @@ function formPart(id){
           '<div class="faint" style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px" class="k-' + r.kind + '">' + esc(KINDS[r.kind].en) + '</div>' +
           inText("route." + i + ".op", r.op, {ph:"Operation name"}) +
           (r.kind === "out" ? '<div class="frow" style="margin-top:8px"><div class="fld" style="margin:0"><select class="in" data-bind="route.' + i + '.proc">' + Object.entries(PROCS).map(([k, v]) => '<option value="' + k + '" ' + (r.proc === k ? "selected" : "") + '>' + v.en + '</option>').join("") + '</select></div><div class="fld" style="margin:0">' + pf("rparty", partyName(S, r.party), "", {ph:"Usual supplier", data:' data-i="' + i + '"'}) + '</div></div>' : "") +
-          (r.kind === "blank" || r.kind === "press" ? '<div style="margin-top:8px">' + pf("rdie", r.die ? "Die " + r.die + " · " + ((dieByNo(r.die) || {}).toolName || "") : "", r.die ? dieHint(r.die) : "", {ph:"Die (optional)", data:' data-i="' + i + '"'}) + '</div>' : "") +
+          (r.kind === "blank" || r.kind === "press" ? '<div class="frow" style="margin-top:8px;align-items:flex-start"><div style="flex:2.2;min-width:0">' + pf("rdie", r.die ? "Die " + r.die + " · " + ((dieByNo(r.die) || {}).toolName || "") : "", r.die ? dieHint(r.die) : "", {ph:"Die (optional)", data:' data-i="' + i + '"'}) + '</div>' +
+            '<div style="flex:1;min-width:0">' + inNum("route." + i + ".ups", r.ups && +r.ups > 1 ? r.ups : "", {ph:"1 pc/stroke", cls:"tall"}) + '</div></div>' : "") +
           '</div><div class="rs-acts"><button type="button" data-fa="rup" data-i="' + i + '" aria-label="Move up">' + ic("up") + '</button><button type="button" data-fa="rdown" data-i="' + i + '" aria-label="Move down">' + ic("down") + '</button><button type="button" data-fa="rdel" data-i="' + i + '" aria-label="Remove">' + ic("trash") + '</button></div></div>').join("") +
+        '<div class="hint" style="margin:0 0 4px">Pcs per stroke: fill only for 2-cavity / 2-up dies — production entry multiplies the stroke count by it.</div>' +
         '<div class="lbl" style="font-size:12px;font-weight:700;color:var(--ink-dim);margin:10px 0 6px">Add step</div><div class="qbtns">' +
         [["blank", "Blanking / cutting"], ["press", "Press operation"], ["out", "Outside process"], ["insp", "Inspection & packing"]].map(k => '<button type="button" class="qbtn" data-fa="radd" data-k="' + k[0] + '"><span class="k-' + k[0] + '">●</span> ' + k[1] + '</button>').join("") + '</div>' +
         '<div class="qbtns" style="margin-top:8px">' + STEP_TPL.map((t, i) => '<button type="button" class="qbtn" data-fa="rtpl" data-i="' + i + '">+ ' + esc(t.op) + '</button>').join("") + '</div></div>';
@@ -2848,7 +3360,7 @@ function formPart(id){
       if (F.route.slice(1).some(r => r.kind === "blank")) return fail("Blanking can only be the first step");
       if (!(await needPin("Save part " + pn))) return false;
       const d = {id:F.id, partNo:pn, name:F.name.trim(), cust:F.cust, form:F.form, grade:F.grade.trim(), thk:toNum(F.thk), width:F.form === "wire" ? 0 : toNum(F.width), len:F.form === "sheet" ? toNum(F.len) : 0, wt:toNum(F.wt), pack:toInt(F.pack),
-        route:F.route.map(r => { const o = {id:r.id || uid("r"), kind:r.kind, op:String(r.op).trim()}; if (r.kind === "out"){ o.proc = r.proc || "job"; if (r.party) o.party = r.party; } if ((r.kind === "blank" || r.kind === "press") && r.die) o.die = String(r.die); return o; }), active:F.active !== false};
+        route:F.route.map(r => { const o = {id:r.id || uid("r"), kind:r.kind, op:String(r.op).trim()}; if (r.kind === "out"){ o.proc = r.proc || "job"; if (r.party) o.party = r.party; } if ((r.kind === "blank" || r.kind === "press") && r.die) o.die = String(r.die); if ((r.kind === "blank" || r.kind === "press") && toInt(r.ups) > 1) o.ups = toInt(r.ups); return o; }), active:F.active !== false};
       addEvent("comp.save", d);
       done("Part " + pn + " saved");
     }});
@@ -2974,7 +3486,8 @@ function openEvent(id){
     let h = '<div style="font-size:17px;font-weight:800">' + esc(inf.t) + '</div><div class="muted" style="margin:2px 0 12px">' + esc(inf.s) + '</div>' +
       '<dl class="kv"><dt>Entered</dt><dd>' + fmtDT(e.ts) + '</dd><dt>By</dt><dd>' + esc(e.by || "—") + '</dd><dt>Status</dt><dd>' + (v ? '<span style="color:#f08a7c">Cancelled</span>' : DB.ids.has(e.id) ? "On server" : MODE === "online" ? "⏳ Waiting to sync" : "On this device") + '</dd></dl>';
     if (rows.length) h += '<div class="tbl-wrap" style="margin-top:14px"><table class="tbl"><tbody>' + rows.map(r => LOG_HEAD.map((hd, i) => r[i] !== "" && r[i] != null ? '<tr><td class="faint">' + hd + '</td><td>' + esc(r[i]) + '</td></tr>' : "").join("") + (rows.length > 1 ? '<tr><td colspan="2" style="background:var(--panel-2);height:4px;padding:0"></td></tr>' : "")).join("") + '</tbody></table></div>';
-    if (!v && TX_TYPES.has(e.type)) h += '<button class="btn btn-danger btn-block" style="margin-top:16px" data-act="void" data-id="' + esc(e.id) + '" type="button">Cancel this entry</button>';
+    if (opEditable(S, e)) h += '<button class="btn btn-primary btn-block" style="margin-top:16px" data-act="ev-edit" data-id="' + esc(e.id) + '" type="button">' + ic("edit") + 'Edit this entry · PIN</button>';
+    if (!v && TX_TYPES.has(e.type)) h += '<button class="btn btn-danger btn-block" style="margin-top:' + (opEditable(S, e) ? 8 : 16) + 'px" data-act="void" data-id="' + esc(e.id) + '" type="button">' + ic("trash") + 'Delete this entry · PIN</button>';
     if (inf.lotId) h += '<button class="btn btn-block" style="margin-top:8px" data-act="lot" data-id="' + esc(inf.lotId) + '" type="button">Open lot</button>';
     return h;
   }});
@@ -2992,11 +3505,61 @@ async function voidEntry(id){
   }
   if (e.type === "rm.in"){ const used = (d.coils || []).some(c => { const co = S.coils.get(c.id); return co && co.uses.length; }); if (used) return confirmBox("Coil already used", "Some coils from this receipt are already used in lots. Cancel those blanking entries first.", "OK"); }
   const multi = (d.lines || []).length > 1 ? " This cancels the whole entry (" + d.lines.length + " lots)." : "";
-  if (!(await needPin("Cancel entry: " + evInfo(S, e).t))) return;
-  const reason = await dialog({title:"Reason for cancelling", msg:"The entry stays in the log, marked cancelled." + multi, input:{ph:"e.g. wrong quantity, entered twice"}, ok:"Cancel entry", danger:true});
+  if (!(await needPin("Delete entry: " + evInfo(S, e).t))) return;
+  const reason = await dialog({title:"Reason for deleting", msg:"The entry stays in the activity log, marked cancelled." + multi, input:{ph:"e.g. wrong quantity, entered twice"}, ok:"Delete entry", danger:true});
   if (reason == null) return;
   addEvent("void", {ref:id, reason:reason.trim()});
-  toast("Entry cancelled", "ok"); render();
+  toast("Entry deleted", "ok"); render();
+}
+
+/* ---------- Edit a press operation entry (manager PIN) ----------
+   Entries are never overwritten: the old one is cancelled ("Edited") and a corrected copy is saved,
+   so the activity log keeps both. Limits stop an edit from breaking what later steps already used. */
+function opEditable(S, e){ return !!(e && e.type === "op" && !isVoid(S, e) && S.lots.has((e.d || {}).lot)); }
+function opEditLimits(e){
+  const S = STATE, d = e.d, l = S.lots.get(d.lot), i = N(d.step), c = l.calc[i], nx = l.calc[i + 1];
+  const used = nx ? Math.max(0, N(d.ok) - nx.wait) : Math.max(0, N(d.ok) - l.fg);   // OK pcs the next step (or FG) has already taken
+  return {lot:l, i, max:c.wait + N(d.ok) + N(d.rej) + N(d.rwk), minOk:used, minRwk:Math.max(0, N(d.rwk) - c.rwk)};
+}
+async function formEditOp(id){
+  const e = STATE.evById.get(id);
+  if (!opEditable(STATE, e)) return toast("Only press operation entries can be edited", "bad");
+  if (!(await needPin("Edit press operation entry"))) return;
+  const d = e.d, oldPcs = N(d.ok) + N(d.rej) + N(d.rwk);
+  const F = {ok:String(N(d.ok)), rej:N(d.rej) ? String(N(d.rej)) : "", rwk:N(d.rwk) ? String(N(d.rwk)) : "", person:d.person || "", shift:d.shift || shiftNow(e.ts), remark:d.remark || ""};
+  const lim = () => opEditLimits(STATE.evById.get(id));
+  const hint = () => { const L = lim(), t = toInt(F.ok) + toInt(F.rej) + toInt(F.rwk);
+    let h = "Max total <b>" + n0(L.max) + "</b> (this entry " + n0(oldPcs) + " + " + n0(L.max - oldPcs) + " still waiting)";
+    if (L.minOk) h += " · next step already used " + n0(L.minOk) + ", so OK can’t go below <b>" + n0(L.minOk) + "</b>";
+    if (t > L.max) h = '<span class="hint bad" style="margin:0">Total ' + n0(t) + ' is more than ' + n0(L.max) + '</span>';
+    else if (toInt(F.ok) < L.minOk) h = '<span class="hint bad" style="margin:0">OK can’t go below ' + n0(L.minOk) + ' — the next step already used them. Edit or delete that entry first.</span>';
+    return h; };
+  formSheet({title:"Edit press operation", hi:"एंट्री बदलें — पिन से", F, saveLabel:"Save changes · सेव करें",
+    body:F => { const L = lim(), S = STATE;
+      return '<div class="box"><div style="font-weight:800">' + esc(compPN(S, L.lot.comp)) + ' · ' + esc(stepName(L.lot, L.i)) + '</div><div class="hint" style="margin-top:4px">Lot ' + esc(L.lot.no) + ' · ' + fmtDayKey(evDay(e)) + ' · entered ' + fmtT(e.ts) + ' by ' + esc(e.by || "—") + (d.mc ? ' · ' + esc(d.mc) : '') + (d.strokes ? ' · ' + n0(d.strokes) + ' strokes' : '') + '</div><div style="margin-top:8px">' + routeStrip(L.lot.route, L.i, L.i) + '</div></div>' +
+        '<div class="qty-grid">' + qtyLine("OK", "ठीक", "ok", F.ok) + qtyLine("Rejected", "रिजेक्ट", "rej", F.rej) + qtyLine("Rework hold", "रीवर्क", "rwk", F.rwk) + '</div>' +
+        '<div class="hint" id="h-eq" style="margin:6px 0 14px">' + hint() + '</div>' +
+        '<div class="frow">' + personField("person", F.person, "Operator", "ऑपरेटर", "op") + shiftField(F) + '</div>' + fld("Remarks", "टिप्पणी", inArea("remark", F.remark)) +
+        '<div class="hint">The old entry stays in the activity log, marked “Edited”.</div>'; },
+    changed:F => { const el = $("#h-eq", F.el); if (el) el.innerHTML = hint(); },
+    summary:F => "OK <b>" + n0(toInt(F.ok)) + "</b>" + (toInt(F.rej) ? " · rej " + n0(toInt(F.rej)) : "") + (toInt(F.rwk) ? " · rework " + n0(toInt(F.rwk)) : "") + ' <span class="faint">(was ' + n0(N(d.ok)) + (N(d.rej) ? " / " + n0(N(d.rej)) : "") + ')</span>',
+    save:async F => {
+      const cur = STATE.evById.get(id); if (!opEditable(STATE, cur)) return fail("This entry was already changed or deleted");
+      const L = lim(), ok = toInt(F.ok), rej = toInt(F.rej), rwk = toInt(F.rwk), t = ok + rej + rwk;
+      if (ok < 0 || rej < 0 || rwk < 0) return fail("Quantities cannot be negative");
+      if (t <= 0) return fail("Enter the quantity — to remove the entry use Delete instead");
+      if (t > L.max) return fail("Only " + n0(L.max) + " pcs available at " + stepName(L.lot, L.i));
+      if (ok < L.minOk) return fail("OK can’t go below " + n0(L.minOk) + " — the next step already used them");
+      if (rwk < L.minRwk) return fail("Rework can’t go below " + n0(L.minRwk) + " — rework results were already entered");
+      const person = F.person.trim(), remark = F.remark.trim();
+      if (ok === N(d.ok) && rej === N(d.rej) && rwk === N(d.rwk) && person === (d.person || "") && F.shift === (d.shift || "") && remark === (d.remark || "")) return fail("Nothing changed");
+      const nd = Object.assign({}, d, {ok, rej, rwk, person, shift:F.shift, remark, date:d.date || evDay(e), editOf:id});
+      if (d.strokes){ const st = Math.max(0, Math.round(N(d.strokes) + (t - oldPcs) / (N(d.ups) || 1))); nd.strokes = st; if (d.ctr != null && d.ctr !== "") nd.ctr = N(d.ctr0) + st; }
+      addEvent("void", {ref:id, reason:"Edited"});
+      addEvent("op", nd);
+      if (person) rememberName("op", person);
+      done("Entry updated · " + n0(ok) + " OK" + (rej ? " · " + n0(rej) + " rej" : ""));
+    }});
 }
 
 /* ---------- Export ---------- */
@@ -3004,8 +3567,9 @@ function csvCell(v){ v = v == null ? "" : String(v); return /[",\n\r]/.test(v) ?
 function exportData(kind){
   const S = STATE, mk = UI.planMonth;
   if (kind === "log"){ const rows = []; for (const e of S.log){ try { for (const r of rowsFor(S, e)) rows.push(r.concat([isVoid(S, e) ? "CANCELLED" : "", e.by || "", e.id])); } catch (x) {} } return {name:"entry-log", head:LOG_HEAD.concat(["Status", "Entered by", "Entry id"]), rows}; }
-  if (kind === "rm") return {name:"rm-stock", head:["Coil no.", "Heat no.", "Grade", "Thk", "Width", "Supplier", "Doc", "Received", "Kg in", "Kg used", "Kg balance", "Status"],
-    rows:[...S.coils.values()].map(c => [c.no, c.heat, c.grade, c.thk, c.width, partyName(S, c.party), c.doc, c.date, c.kg, Math.round(c.used * 10) / 10, Math.round(c.rem * 10) / 10, c.done ? "finished" : c.used ? "in use" : "full"])};
+  if (kind === "rm") return {name:"rm-stock", head:["MRN no.", "Coil no.", "Heat no.", "Grade", "Thk", "Width", "Supplier", "Doc", "Received", "Kg in", "Kg used", "Kg balance", "Status", "Lots"],
+    rows:[...S.coils.values()].map(c => [c.mrn || "", c.no, c.heat, c.grade, c.thk, c.width, partyName(S, c.party), c.doc, c.date, c.kg, Math.round(c.used * 10) / 10, Math.round(c.rem * 10) / 10, c.done ? "finished" : c.used ? "in use" : "full",
+      [...new Set(c.uses.map(u => (S.lots.get(u.lot) || {}).no).filter(Boolean))].join("; ")])};
   if (kind === "wip") return {name:"wip-by-lot", head:["Lot", "Part no.", "Part name", "Started", "Status", "Press shop", "At suppliers", "Inspection queue", "FG", "Dispatched", "Rejected", "Where"],
     rows:[...S.lots.values()].map(l => [l.no, compPN(S, l.comp), compName(S, l.comp), dayKey(l.ts), l.status, lotStageQty(l, "plant"), lotStageQty(l, "out"), lotStageQty(l, "insp"), l.fg, l.disp, l.rejT, l.bk.map(b => bkText(S, l, b).replace(/<[^>]+>/g, "")).join(" | ")])};
   if (kind === "fg"){ const w = compWip(S); return {name:"fg-stock", head:["Part no.", "Part name", "Customer", "FG", "Inspection queue", "At suppliers", "Press shop"], rows:[...S.comps.values()].map(c => { const x = w.get(c.id) || {fg:0, insp:0, out:0, plant:0}; return [c.partNo, c.name, partyName(S, c.cust), x.fg, x.insp, x.out, x.plant]; })}; }
@@ -3117,14 +3681,17 @@ const ACT = {
   "close-top":() => closeTop(),
   "entry":() => openEntryMenu(),
   "new":(d, el) => {
-    const pre = {}; if (d.party) pre.party = d.party; if (d.comp) pre.comp = d.comp;
+    const pre = {}; if (d.party) pre.party = d.party; if (d.comp) pre.comp = d.comp; if (d.mc) pre.mc = d.mc;
     if (d.replace && LAYERS.length) closeTop();
     setTimeout(() => openForm(d.f, pre), d.replace ? 60 : 0);
   },
+  "pe":d => openForm("prod", {mc:d.mc}),
   "lot":d => openLot(d.id),
   "coil":d => openCoil(d.id),
+  "grn":d => openGrn(d.id),
   "ev":d => openEvent(d.id),
   "void":d => voidEntry(d.id),
+  "ev-edit":d => formEditOp(d.id),
   "lot-next":d => {
     const lot = STATE.lots.get(d.id); if (!lot) return;
     const nx = nextAction(STATE, lot); if (!nx) return;

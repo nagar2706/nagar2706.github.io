@@ -328,6 +328,9 @@ input[type="date"].in{color-scheme:dark;}
 .lockbox h1{font-size:20px;margin:0 0 4px;}
 .lockbox .in{text-align:center;font-size:24px;letter-spacing:.3em;font-family:var(--mono);margin:18px 0 10px;}
 .lockbox .lk-msg{min-height:20px;font-size:13px;margin-bottom:10px;}
+.lockbox .in.lg-f{font-size:16px;letter-spacing:0;font-family:inherit;text-align:left;margin:6px 0;}
+.lockbox .lg-f:first-of-type{margin-top:18px;}
+.tmp-pw{font-family:var(--mono);font-size:26px;letter-spacing:.12em;margin:12px 0;user-select:all;-webkit-user-select:all;color:var(--amber);}
 .entry.feat{border-color:var(--amber);background:linear-gradient(135deg,var(--amber-dim),var(--panel) 75%);padding:15px 13px;}
 .entry.feat .e-ico{background:var(--amber);color:#1a1206;width:46px;height:46px;}
 .entry.feat .e-t{font-size:16px;}
@@ -518,7 +521,7 @@ const TOOL_BACKEND_URL = "https://script.google.com/macros/s/AKfycbwJ4mCkKguQ2dh
 
 /* ===================================================================================== */
 const PREVIEW = false;          // true only in the hosted preview build (sample data, no server)
-const APP_VER = "1.2";
+const APP_VER = "1.3";
 const DEFAULT_PIN = "1234";     // manager PIN until changed in Settings (same default as PM Tracker)
 const SYNC_EVERY_MS = 90 * 1000;
 
@@ -599,7 +602,7 @@ function computeMode(){
 }
 function isDemo(){ return MODE === "preview" || MODE === "sample"; }
 function deviceId(){ let d = lsGet("pt-dev", ""); if (!d){ d = "d" + code(6).toLowerCase(); lsSet("pt-dev", d); } return d; }
-function userName(){ return lsGet("pt-user", "") || ""; }
+function userName(){ const m = me(); return m ? m.name : (lsGet("pt-user", "") || ""); }
 
 /* ---------- IndexedDB key/value with localStorage fallback ---------- */
 let _idbP = null;
@@ -661,6 +664,7 @@ function rebuild(){
 /* ---------- create an entry ---------- */
 function addEvent(type, d){
   const ev = { id:uid("e"), type, ts:new Date().toISOString(), by:userName() || "—", dev:deviceId(), d };
+  if (me()) ev.uid = myId();     // the server checks the login and sets by/uid itself
   try { ev.rows = rowsFor(STATE, ev); } catch (e){ ev.rows = []; }
   DB.outbox.push(ev);
   saveOutbox();
@@ -683,51 +687,151 @@ function namesFor(list){
   return out.slice(0, 40);
 }
 
-/* ---------- Team access code ----------
-   The Google Sheet backend (Code.gs) refuses to send or save data without the code, so the
-   link and the public page code alone are not enough. Each device asks once and remembers it. */
+/* ---------- Logins (v1.3) and the old team access code ----------
+   Every person logs in with their own user ID and password. The Google Sheet backend (Code.gs)
+   checks the login on every request and itself records the logged-in user on each entry, so
+   "entered by" can't be typed in or faked from a phone. Until the first user account exists on
+   the server, the old team access code keeps working, so the change-over doesn't stop anyone. */
 let LOCKED = false;
 function accessKey(){ return String(lsGet("pt-key", "") || ""); }
-function showLock(msg){
-  LOCKED = true;
+function token(){ return String(lsGet("pt-tok", "") || ""); }
+function me(){ const m = lsGet("pt-me", null); return m && m.id && token() ? m : null; }
+function myId(){ const m = me(); return m ? m.id : ""; }
+function myRole(){ const m = me(); return m ? m.role : ""; }
+function isAdmin(){ return myRole() === "admin"; }
+function canManage(){ const r = myRole(); return r === "manager" || r === "admin"; }
+function obMine(e){ const m = me(); return !m || !e.uid || e.uid === m.id; }      // outbox entries this login may upload
+const ROLE_TXT = {entry:"Entry", manager:"Manager", admin:"Admin"};
+function setLogin(tok, user){ lsSet("pt-tok", tok); lsSet("pt-me", user); lsSet("pt-lastid", user.id); lsSet("pt-srv-users", true); touch(true); }
+function clearLogin(){ lsDel("pt-tok"); lsDel("pt-me"); PIN_OK_UNTIL = 0; }
+
+function lockEl(){
   let el = document.getElementById("lockscr");
   if (!el){
     el = document.createElement("div"); el.id = "lockscr"; el.className = "lockscr";
-    el.innerHTML = '<form class="lockbox" autocomplete="off"><div class="lk-ico">' + ic("lock") + '</div><h1>' + esc(document.title.split("—")[0].trim() || "Dashboard") + '</h1>' +
-      '<div class="faint" style="font-size:13px">Enter the team access code<br>टीम ऐक्सेस कोड डालें</div>' +
-      '<input class="in" id="lkIn" type="password" inputmode="numeric" autocomplete="off" enterkeyhint="go" placeholder="••••••">' +
-      '<div class="lk-msg" id="lkMsg"></div><button class="btn btn-primary btn-block btn-lg" id="lkBtn" type="submit">Unlock · खोलें</button>' +
-      '<div class="faint" style="font-size:11.5px;margin-top:14px">Ask the production manager for the code.</div></form>';
     document.body.appendChild(el);
-    el.querySelector("form").addEventListener("submit", e => { e.preventDefault(); tryUnlock(); });
+    el.addEventListener("submit", e => { e.preventDefault(); const f = e.target.dataset.f; if (f === "login") tryLogin(); else if (f === "code") tryUnlock(); else if (f === "pw") tryPwChange(); });
   }
   el.style.display = "";
-  const m = document.getElementById("lkMsg"); if (m){ m.textContent = msg || ""; m.style.color = msg ? "#f2c35a" : ""; }
-  const v = $("#view"); if (v) v.innerHTML = "";
+  return el;
+}
+function lockHead(sub){ return '<div class="lk-ico">' + ic("lock") + '</div><h1>' + esc(document.title.split("—")[0].trim() || "Dashboard") + '</h1><div class="faint" style="font-size:13px">' + sub + '</div>'; }
+function lockMsg(t, bad){ const m = document.getElementById("lkMsg"); if (m){ m.textContent = t || ""; m.style.color = bad ? "#f08a7c" : t ? "#f2c35a" : ""; } }
+function coverView(){ LOCKED = true; try { closeAll(); } catch (e) {} const v = $("#view"); if (v) v.innerHTML = ""; }
+/* decide what the lock screen asks for: a login (server has user accounts) or the old access code */
+async function gate(msg){
+  coverView();
+  if (lsGet("pt-srv-users", false)) return showLogin(msg);
+  lockEl().innerHTML = '<div class="lockbox">' + lockHead("Checking… · जाँच हो रही है") + '</div>';
+  try { const r = await ptCall("ping", {}); if (r.logins){ lsSet("pt-srv-users", true); return showLogin(msg || (accessKey() ? "This Sheet now uses personal logins. Log in with your user ID." : "")); } if (r.auth) return unlockDone(); showLock(msg); }
+  catch (e){ showLogin(msg || (navigator.onLine === false ? "No internet — logging in needs a connection." : "Couldn’t reach the Google Sheet: " + (e.message || e))); }
+}
+function showLogin(msg){
+  coverView();
+  const last = lsGet("pt-lastid", "") || "";
+  lockEl().innerHTML = '<form class="lockbox" data-f="login" autocomplete="on">' + lockHead("Log in with your user ID<br>अपनी यूज़र आईडी से लॉग इन करें") +
+    '<input class="in lg-f" id="lgId" name="username" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" placeholder="User ID · यूज़र आईडी" value="' + esc(last) + '">' +
+    '<input class="in lg-f" id="lgPw" name="password" type="password" autocomplete="current-password" enterkeyhint="go" placeholder="Password · पासवर्ड">' +
+    '<div class="lk-msg" id="lkMsg"></div><button class="btn btn-primary btn-block btn-lg" id="lkBtn" type="submit">Log in · लॉग इन</button>' +
+    '<div class="faint" style="font-size:11.5px;margin-top:14px">No account, or forgot your password? Ask the admin.</div></form>';
+  lockMsg(msg || "");
+  setTimeout(() => { const i = document.getElementById(last ? "lgPw" : "lgId"); if (i) i.focus(); }, 50);
+}
+function showLock(msg){   // old team access code — only while the server has no user accounts yet
+  coverView();
+  lockEl().innerHTML = '<form class="lockbox" data-f="code" autocomplete="off">' + lockHead("Enter the team access code<br>टीम ऐक्सेस कोड डालें") +
+    '<input class="in" id="lkIn" type="password" inputmode="numeric" autocomplete="off" enterkeyhint="go" placeholder="••••••">' +
+    '<div class="lk-msg" id="lkMsg"></div><button class="btn btn-primary btn-block btn-lg" id="lkBtn" type="submit">Unlock · खोलें</button>' +
+    '<div class="faint" style="font-size:11.5px;margin-top:14px">Ask the production manager for the code.</div></form>';
+  lockMsg(msg || "");
   setTimeout(() => { const i = document.getElementById("lkIn"); if (i) i.focus(); }, 50);
 }
+function unlockDone(){
+  LOCKED = false;
+  const el = document.getElementById("lockscr"); if (el){ el.style.display = "none"; el.innerHTML = ""; }
+  render(); syncNow(); startSyncLoop();
+}
+async function tryLogin(){
+  const id = ($("#lgId").value || "").trim().toLowerCase(), pw = $("#lgPw").value || "", b = $("#lkBtn");
+  if (!id || !pw) return lockMsg("Enter your user ID and password", true);
+  b.disabled = true; lockMsg("Checking…");
+  try {
+    const r = await ptCall("login", {user:id, pass:pw, dev:deviceId()});
+    setLogin(r.tok, r.user);
+    if (r.user.mustChange) return showPwForm(true, pw);
+    unlockDone(); toast("Welcome, " + r.user.name, "ok");
+  } catch (e){
+    lockMsg(navigator.onLine === false ? "No internet — logging in needs a connection." : (e.message || String(e)), true);
+    const p = $("#lgPw"); if (p){ p.value = ""; p.focus(); }
+  } finally { if (b) b.disabled = false; }
+}
+/* choose a new password — required after a temporary password, or from Settings */
+function showPwForm(forced, oldPw){
+  coverView();
+  const m = me() || {};
+  lockEl().innerHTML = '<form class="lockbox" data-f="pw" autocomplete="off">' + lockHead((forced ? "Hi " + esc(m.name || "") + " — now choose your own password" : "Change your password") + "<br>अपना पासवर्ड बनाएँ") +
+    (oldPw ? '<input type="hidden" id="pwOld" value="' + esc(oldPw) + '">' : '<input class="in lg-f" id="pwOld" type="password" autocomplete="current-password" placeholder="Current password">') +
+    '<input class="in lg-f" id="pwNew" type="password" autocomplete="new-password" placeholder="New password (6+ characters)">' +
+    '<input class="in lg-f" id="pwNew2" type="password" autocomplete="new-password" enterkeyhint="go" placeholder="Repeat new password">' +
+    '<div class="lk-msg" id="lkMsg"></div><button class="btn btn-primary btn-block btn-lg" id="lkBtn" type="submit">Save password</button>' +
+    '<button class="btn btn-ghost btn-block" style="margin-top:8px" type="button" data-act="' + (forced ? "logout-now" : "pw-cancel") + '">' + (forced ? "Log out" : "Cancel") + '</button>' +
+    '<div class="faint" style="font-size:11.5px;margin-top:14px">Don’t use your name, phone number or 123456. Don’t share it — entries are recorded under your login.</div></form>';
+  setTimeout(() => { const i = document.getElementById(oldPw ? "pwNew" : "pwOld"); if (i) i.focus(); }, 50);
+}
+async function tryPwChange(){
+  const o = $("#pwOld").value, a = $("#pwNew").value, c = $("#pwNew2").value, b = $("#lkBtn");
+  if (!o) return lockMsg("Enter your current password", true);
+  if (a.length < 6) return lockMsg("New password: at least 6 characters", true);
+  if (a !== c) return lockMsg("The two new passwords don’t match", true);
+  b.disabled = true; lockMsg("Saving…");
+  try {
+    const r = await ptCall("me.password", {old:o, pass:a, dev:deviceId()});
+    setLogin(r.tok, r.user); unlockDone(); toast("Password saved · other devices logged out", "ok");
+  } catch (e){
+    if (e.locked){ clearLogin(); return showLogin("Your login ended — log in again."); }
+    lockMsg(e.message || String(e), true);
+  } finally { if (b) b.disabled = false; }
+}
 async function tryUnlock(){
-  const i = document.getElementById("lkIn"), m = document.getElementById("lkMsg"), b = document.getElementById("lkBtn");
+  const i = document.getElementById("lkIn"), b = document.getElementById("lkBtn");
   const code = String(i.value || "").trim();
-  const say = (t, bad) => { m.textContent = t; m.style.color = bad ? "#f08a7c" : ""; };
-  if (!code) return say("Enter the code", true);
-  b.disabled = true; say("Checking…");
+  if (!code) return lockMsg("Enter the code", true);
+  b.disabled = true; lockMsg("Checking…");
   const prev = accessKey(); lsSet("pt-key", code);
   try {
     const r = await ptCall("ping", {});
+    if (r.logins){ lsSet("pt-srv-users", true); lsSet("pt-key", prev); return showLogin("This Sheet now uses personal logins."); }
     if (r.auth === false) throw Object.assign(new Error("Wrong code"), {locked:true});
-    LOCKED = false;
-    const el = document.getElementById("lockscr"); if (el) el.style.display = "none";
-    i.value = ""; render(); syncNow(); startSyncLoop();
+    i.value = ""; unlockDone();
     if (!userName() && !boot._asked){ boot._asked = true;
       setTimeout(async () => { const n = await dialog({title:"Your name", msg:"Saved with every entry you make, so the log shows who entered what.<br><span class='faint'>आपका नाम — हर एंट्री के साथ सेव होगा</span>", input:{ph:"e.g. Om"}, ok:"Save", cancel:"Later"}); if (n && n.trim()){ lsSet("pt-user", n.trim()); render(); } }, 300); }
   } catch (e){
     lsSet("pt-key", e && e.locked ? "" : prev);
-    if (e && e.locked) say("Wrong code — try again", true);
-    else say(navigator.onLine === false ? "No internet — the code is checked online the first time." : "Couldn’t reach the Google Sheet: " + (e.message || e), true);
+    if (e && e.locked) lockMsg("Wrong code — try again", true);
+    else lockMsg(navigator.onLine === false ? "No internet — the code is checked online the first time." : "Couldn’t reach the Google Sheet: " + (e.message || e), true);
     i.select();
   } finally { b.disabled = false; }
 }
+function myPending(){ const m = me(); return m ? DB.outbox.filter(e => !DB.ids.has(e.id) && e.uid === m.id).length : 0; }
+async function doLogout(auto){
+  if (me() && !auto){
+    if (myPending() && MODE === "online") await syncNow();
+    const left = myPending();
+    if (left && !(await confirmBox("Not uploaded yet", left + " of your " + plural(left, "entry", "entries") + " are still only on this device. They upload under your name the next time you log in here.", "Log out anyway", true))) return;
+  }
+  if (token()) ptCall("logout", {}).catch(() => {});     // ends the login on the server too
+  clearLogin();
+  showLogin(auto ? "Logged out after " + idleLabel(idleMin()) + " without use." : "Logged out · लॉग आउट हो गया");
+}
+/* automatic log-out after no use (per device — short on shared PCs) */
+let LAST_ACT = Number(lsGet("pt-act", 0)) || Date.now();
+function idleMin(){ const v = lsGet("pt-idle", 240); return typeof v === "number" ? v : 240; }
+function idleLabel(m){ return m >= 60 ? (m / 60) + " h" : m + " min"; }
+function touch(force){ const n = Date.now(); if (force || n - LAST_ACT > 15e3){ LAST_ACT = n; lsSet("pt-act", n); } }
+function idleOver(){ const lim = idleMin(); if (!lim || !me()) return false; return Date.now() - Math.max(LAST_ACT, Number(lsGet("pt-act", 0)) || 0) > lim * 60e3; }
+function idleCheck(){ if (!LOCKED && MODE === "online" && idleOver()) doLogout(true); }
+["pointerdown", "keydown"].forEach(t => document.addEventListener(t, () => { if (!LOCKED) touch(); }, {passive:true, capture:true}));
+setInterval(idleCheck, 30e3);
 
 /* ---------- backend calls ---------- */
 async function fetchTO(url, opts, ms){
@@ -742,10 +846,12 @@ async function ptCall(action, params, urlOverride){
   const body = new URLSearchParams();
   body.set("action", action);
   body.set("key", accessKey());
+  if (token() && action !== "login") body.set("tok", token());
   for (const k in (params || {})) body.set(k, typeof params[k] === "string" ? params[k] : JSON.stringify(params[k]));
   const r = await fetchTO(url, {method:"POST", body, redirect:"follow"}, 45000);
   let j; try { j = await r.json(); } catch (e){ throw new Error("Server reply was not JSON — check the web app URL and that access is set to “Anyone”"); }
-  if (j && j.locked){ const er = new Error(j.error || "Access code needed"); er.locked = true; throw er; }
+  if (j && j.locked){ const er = new Error(j.error || "Access code needed"); er.locked = true; er.login = !!j.login; throw er; }
+  if (j && j.mustChange && action !== "me.password"){ const m = me(); if (m){ m.mustChange = true; lsSet("pt-me", m); } setTimeout(() => showPwForm(true), 0); throw new Error(j.error); }
   if (!j || j.ok === false) throw new Error((j && j.error) || "Server error");
   return j;
 }
@@ -770,13 +876,14 @@ async function pullAll(){
 function setSync(state, msg){ SYNC.state = state; SYNC.msg = msg || ""; renderSync(); }
 async function syncNow(manual){
   if (MODE !== "online"){ setSync(MODE); if (manual) toast(isDemo() ? "Sample data — nothing to sync" : "Connect the Google Sheet in Settings first"); return; }
+  if (LOCKED){ setSync("error", "Log in needed"); return; }
   if (SYNC.busy){ SYNC.again = true; return; }
   SYNC.busy = true; setSync("syncing");
   try {
     await pullAll();
     let rounds = 0;
     while (DB.outbox.length && rounds++ < 20){
-      const pend = DB.outbox.filter(e => !DB.ids.has(e.id));
+      const pend = DB.outbox.filter(e => !DB.ids.has(e.id) && obMine(e));
       if (!pend.length) break;
       const batch = pend.slice(0, 80);
       const r = await ptCall("push", {events:JSON.stringify(batch)});
@@ -796,9 +903,10 @@ async function syncNow(manual){
     DB.outbox = DB.outbox.filter(e => !DB.ids.has(e.id));
     await saveOutbox();
     SYNC.lastOk = Date.now(); lsSet("pt-lastsync", SYNC.lastOk);
-    setSync(DB.outbox.length ? "pend" : "ok");
+    setSync(DB.outbox.some(obMine) ? "pend" : "ok");
   } catch (e){
-    if (e && e.locked){ const had = !!accessKey(); lsSet("pt-key", ""); setSync("error", "Access code needed"); showLock(had ? "The access code has changed — enter the new one." : (document.getElementById("lkMsg") || {}).textContent || ""); }
+    if (e && e.locked && (e.login || lsGet("pt-srv-users", false))){ const had = !!token(); lsSet("pt-srv-users", true); clearLogin(); setSync("error", "Log in needed"); showLogin(had ? "Your login has ended — please log in again." : "This Sheet now uses personal logins. Log in with your user ID."); }
+    else if (e && e.locked){ const had = !!accessKey(); lsSet("pt-key", ""); setSync("error", "Access code needed"); showLock(had ? "The access code has changed — enter the new one." : (document.getElementById("lkMsg") || {}).textContent || ""); }
     else setSync((typeof navigator !== "undefined" && navigator.onLine === false) ? "offline" : "error", String(e && e.message || e));
   } finally {
     SYNC.busy = false;
@@ -1780,7 +1888,13 @@ const confirmBox = (title, msg, ok, danger) => dialog({title, msg, ok:ok || "OK"
 
 let PIN_OK_UNTIL = 0;
 function pinHash(){ return STATE.cfg.pin || hashPin(DEFAULT_PIN); }
+function pinTag(){ return me() ? (canManage() ? "" : " · manager only") : " · PIN"; }
 async function needPin(reason){
+  if (me()){                // personal logins: the role decides (the Google Sheet checks it again)
+    if (canManage()) return true;
+    await dialog({title:"Manager only", msg:esc(reason || "") + "<br>Only a manager or admin can do this. You are logged in as <b>" + esc(me().name) + "</b> (" + esc(ROLE_TXT[myRole()] || myRole()) + ").<br><span class='faint'>यह केवल मैनेजर कर सकते हैं</span>", ok:"OK", cancel:false});
+    return false;
+  }
   if (Date.now() < PIN_OK_UNTIL) return true;
   const v = await dialog({title:"Manager PIN", msg:esc(reason || "Enter the manager PIN") + '<br><span class="faint">मैनेजर पिन डालें</span>', input:{type:"password", mode:"numeric", ph:"••••", cls:"pin-in"}, ok:"Confirm"});
   if (v == null) return false;
@@ -1918,7 +2032,7 @@ function renderShell(){
 }
 function renderSync(){
   const pill = $("#syncPill"), txt = $("#syncTxt"); if (!pill) return;
-  const pend = DB.outbox.filter(e => !DB.ids.has(e.id)).length;
+  const pend = DB.outbox.filter(e => !DB.ids.has(e.id) && obMine(e)).length;
   let cls = "", t = "";
   if (MODE === "preview" || MODE === "sample"){ cls = "local"; t = "Sample data"; }
   else if (MODE === "local"){ cls = pend ? "pend" : "local"; t = pend ? pend + " on this phone" : "This phone only"; }
@@ -2508,7 +2622,7 @@ function formSetup(pre){
       const c = S.comps.get(F.comp); if (!c) return fail("Choose the part");
       if (F.step === "") return fail("Choose the operation");
       const m = machineByNo(F.mc);
-      if (m && m.openBreakdownId && !(await confirmBox("Machine is down", F.mc + " has an open breakdown in PM Tracker. Record the setup anyway?", "Record anyway"))) return false;
+      if (m && m.openBreakdownId && !(await confirmBox("Machine is down", esc(F.mc) + " has an open breakdown in PM Tracker. Record the setup anyway?", "Record anyway"))) return false;
       lsSet("pt-last-mc", F.mc); lsSet("pt-last-setter", F.person.trim()); rememberName("setter", F.person);
       addEvent("setup", {mc:F.mc, die:F.die, comp:F.comp, step:+F.step, opName:c.route[+F.step].op, person:F.person.trim(), remark:F.remark.trim()});
       done("Setup saved · " + F.mc + " → " + c.partNo + " " + c.route[+F.step].op);
@@ -2586,7 +2700,7 @@ function formBlank(pre){
       const co = coil();
       if (!co && !(await confirmBox("No coil selected", "Without a coil the lot cannot be traced back to its heat number. Save anyway?", "Save without coil"))) return false;
       if (co && !F.coilDone && k > co.rem + 0.5) return fail("More than the coil balance (" + kg(co.rem) + ")");
-      if (co && !coilMatches(co, c) && !(await confirmBox("Different material", "Coil " + co.no + " is " + specLabel(co) + " but " + c.partNo + " needs " + specLabel(c) + ". Save anyway?", "Save anyway"))) return false;
+      if (co && !coilMatches(co, c) && !(await confirmBox("Different material", "Coil " + esc(co.no) + " is " + esc(specLabel(co)) + " but " + esc(c.partNo) + " needs " + esc(specLabel(c)) + ". Save anyway?", "Save anyway"))) return false;
       lsSet("pt-last-op", F.person.trim()); rememberName("op", F.person);
       addEvent("blank", {lot:lotId, lotNo, newLot, route:newLot ? c.route : undefined, comp:c.id, coil:co ? co.id : "", kg:k, coilDone:!!(co && F.coilDone), ok, rej, mc:F.mc, die:F.die, person:F.person.trim(), shift:F.shift, remark:F.remark.trim()});
       done("Lot " + lotNo + " · " + n0(ok) + " blanks saved");
@@ -3218,7 +3332,8 @@ async function peUndo(F, k){
   }
   const label = (r.mc || "Entry") + " · " + n0(r.ok + r.rej) + " pcs at " + fmtT(r.ts) + (r.person ? " · " + r.person : "");
   let reason = "Undo — wrong entry";
-  if (!(await needPin((peRecent(r) ? "Undo: " : "Delete: ") + label))) return;
+  const ownUndo = peRecent(r) && me() && evs.length && evs.every(e => e.uid === myId());   // own entry, last 20 min
+  if (!ownUndo && !(await needPin((peRecent(r) ? "Undo: " : "Delete: ") + label))) return;
   if (peRecent(r)){
     if (!(await confirmBox("Undo this entry?", esc(label) + "<br>It stays in the activity log, marked cancelled.", "Undo", true))) return;
   } else {
@@ -3315,16 +3430,17 @@ const MORE_ITEMS = [
   {p:"log", t:"Activity log", hi:"सभी एंट्री", ic:"log"},
   {p:"export", t:"Export to Excel", hi:"CSV डाउनलोड", ic:"export"},
   {p:"settings", t:"Settings & connection", hi:"सेटिंग", ic:"plug"},
+  {p:"users", t:"Users & passwords", hi:"यूज़र व पासवर्ड", ic:"users"},
   {p:"guide", t:"Setup guide", hi:"Google Sheet कैसे जोड़ें", ic:"help"},
 ];
 function viewMore(){
   const S = STATE;
-  const sub = {parts:S.comps.size + " parts", parties:S.parties.size + " parties", machines:machines().length + " machines · " + dies().length + " dies", log:S.log.length + " entries", export:"entry log, stock, WIP, dispatch", settings:MODE === "online" ? "Connected" : MODE === "local" ? "Not connected" : "Sample data", guide:"5 minutes, one time"};
-  return '<div class="panel" style="padding:4px 12px">' + MORE_ITEMS.map(m => '<button class="lrow" data-act="more" data-p="' + m.p + '" type="button"><span class="l-ico">' + ic(m.ic) + '</span><span class="l-main"><span class="l-t" style="display:block">' + m.t + ' <span class="hi" style="font-size:12px">' + m.hi + '</span></span><span class="l-s" style="display:block">' + esc(sub[m.p] || "") + '</span></span>' + ic("chev", "faint") + '</button>').join("") + '</div>' +
-    '<div class="hint" style="text-align:center">Production Tracker v' + APP_VER + ' · ' + esc(userName() || "name not set") + ' · ' + esc(deviceId()) + '</div>';
+  const sub = {parts:S.comps.size + " parts", parties:S.parties.size + " parties", machines:machines().length + " machines · " + dies().length + " dies", log:S.log.length + " entries", export:"entry log, stock, WIP, dispatch", settings:MODE === "online" ? "Connected" : MODE === "local" ? "Not connected" : "Sample data", guide:"5 minutes, one time", users:"add people, reset passwords"};
+  return '<div class="panel" style="padding:4px 12px">' + MORE_ITEMS.filter(m => m.p !== "users" || isAdmin()).map(m => '<button class="lrow" data-act="more" data-p="' + m.p + '" type="button"><span class="l-ico">' + ic(m.ic) + '</span><span class="l-main"><span class="l-t" style="display:block">' + m.t + ' <span class="hi" style="font-size:12px">' + m.hi + '</span></span><span class="l-s" style="display:block">' + esc(sub[m.p] || "") + '</span></span>' + ic("chev", "faint") + '</button>').join("") + '</div>' +
+    '<div class="hint" style="text-align:center">Production Tracker v' + APP_VER + ' · ' + esc(userName() || "name not set") + (me() ? " (" + esc(me().id) + ")" : "") + ' · ' + esc(deviceId()) + '</div>';
 }
 function openMore(p){
-  ({parts:pageParts, parties:pageParties, machines:pageMachines, log:pageLog, export:pageExport, settings:pageSettings, guide:pageGuide}[p] || pageSettings)();
+  ({parts:pageParts, parties:pageParties, machines:pageMachines, log:pageLog, export:pageExport, settings:pageSettings, guide:pageGuide, users:pageUsers}[p] || pageSettings)();
 }
 
 /* ---------- Parts ---------- */
@@ -3541,13 +3657,17 @@ function openEvent(id){
     const S = STATE, e = S.evById.get(id); if (!e) return '<div class="empty">Not found</div>';
     const inf = evInfo(S, e), v = isVoid(S, e), rows = (() => { try { return rowsFor(S, e); } catch (x){ return []; } })();
     let h = '<div style="font-size:17px;font-weight:800">' + esc(inf.t) + '</div><div class="muted" style="margin:2px 0 12px">' + esc(inf.s) + '</div>' +
-      '<dl class="kv"><dt>Entered</dt><dd>' + fmtDT(e.ts) + '</dd><dt>By</dt><dd>' + esc(e.by || "—") + '</dd><dt>Status</dt><dd>' + (v ? '<span style="color:#f08a7c">Cancelled</span>' : DB.ids.has(e.id) ? "On server" : MODE === "online" ? "⏳ Waiting to sync" : "On this device") + '</dd></dl>';
+      '<dl class="kv"><dt>Entered</dt><dd>' + fmtDT(e.ts) + '</dd><dt>By</dt><dd>' + byHtml(e) + '</dd><dt>Status</dt><dd>' + (v ? '<span style="color:#f08a7c">Cancelled</span>' : DB.ids.has(e.id) ? "On server" : MODE === "online" ? "⏳ Waiting to sync" : "On this device") + '</dd></dl>';
     if (rows.length) h += '<div class="tbl-wrap" style="margin-top:14px"><table class="tbl"><tbody>' + rows.map(r => LOG_HEAD.map((hd, i) => r[i] !== "" && r[i] != null ? '<tr><td class="faint">' + hd + '</td><td>' + esc(r[i]) + '</td></tr>' : "").join("") + (rows.length > 1 ? '<tr><td colspan="2" style="background:var(--panel-2);height:4px;padding:0"></td></tr>' : "")).join("") + '</tbody></table></div>';
-    if (opEditable(S, e)) h += '<button class="btn btn-primary btn-block" style="margin-top:16px" data-act="ev-edit" data-id="' + esc(e.id) + '" type="button">' + ic("edit") + 'Edit this entry · PIN</button>';
-    if (!v && TX_TYPES.has(e.type)) h += '<button class="btn btn-danger btn-block" style="margin-top:' + (opEditable(S, e) ? 8 : 16) + 'px" data-act="void" data-id="' + esc(e.id) + '" type="button">' + ic("trash") + 'Delete this entry · PIN</button>';
+    if (opEditable(S, e)) h += '<button class="btn btn-primary btn-block" style="margin-top:16px" data-act="ev-edit" data-id="' + esc(e.id) + '" type="button">' + ic("edit") + 'Edit this entry' + pinTag() + '</button>';
+    if (!v && TX_TYPES.has(e.type)) h += '<button class="btn btn-danger btn-block" style="margin-top:' + (opEditable(S, e) ? 8 : 16) + 'px" data-act="void" data-id="' + esc(e.id) + '" type="button">' + ic("trash") + 'Delete this entry' + pinTag() + '</button>';
     if (inf.lotId) h += '<button class="btn btn-block" style="margin-top:8px" data-act="lot" data-id="' + esc(inf.lotId) + '" type="button">Open lot</button>';
     return h;
   }});
+}
+function byHtml(e){
+  if (e.sts && e.uid) return esc(e.by || "—") + ' <span class="badge b-ok">✓ login ' + esc(e.uid) + '</span><br><span class="faint" style="font-size:12px">checked by the Google Sheet · ' + fmtDT(e.sts) + '</span>';
+  return esc(e.by || "—") + (DB.ids.has(e.id) ? ' <span class="faint" style="font-size:12px">· name typed on the device (before logins)</span>' : "");
 }
 async function voidEntry(id){
   const S = STATE, e = S.evById.get(id); if (!e || isVoid(S, e)) return;
@@ -3558,7 +3678,7 @@ async function voidEntry(id){
   (d.lines || []).forEach(l => { if (l.newLot) created.push(l.lot); });
   for (const lid of created){
     const deps = S.log.filter(x => x.id !== e.id && !isVoid(S, x) && evTouchesLot(x, lid));
-    if (deps.length) return confirmBox("Cancel later entries first", "Lot " + ((S.lots.get(lid) || {}).no || "") + " has " + deps.length + " later " + plural(deps.length, "entry", "entries") + ". Cancel those first (newest first), then this one.", "OK");
+    if (deps.length) return confirmBox("Cancel later entries first", "Lot " + esc((S.lots.get(lid) || {}).no || "") + " has " + deps.length + " later " + plural(deps.length, "entry", "entries") + ". Cancel those first (newest first), then this one.", "OK");
   }
   if (e.type === "rm.in"){ const used = (d.coils || []).some(c => { const co = S.coils.get(c.id); return co && co.uses.length; }); if (used) return confirmBox("Coil already used", "Some coils from this receipt are already used in lots. Cancel those blanking entries first.", "OK"); }
   const multi = (d.lines || []).length > 1 ? " This cancels the whole entry (" + d.lines.length + " lots)." : "";
@@ -3620,7 +3740,8 @@ async function formEditOp(id){
 }
 
 /* ---------- Export ---------- */
-function csvCell(v){ v = v == null ? "" : String(v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function xlSafe(v){ return typeof v === "string" && (/^[=+@\t\r]/.test(v) || (/^-/.test(v) && !/^-[\d.,\s]*$/.test(v))) ? "'" + v : v; }
+function csvCell(v){ v = v == null ? "" : String(xlSafe(v)); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
 function exportData(kind){
   const S = STATE, mk = UI.planMonth;
   if (kind === "log"){ const rows = []; for (const e of S.log){ try { for (const r of rowsFor(S, e)) rows.push(r.concat([isVoid(S, e) ? "CANCELLED" : "", e.by || "", e.id])); } catch (x) {} } return {name:"entry-log", head:LOG_HEAD.concat(["Status", "Entered by", "Entry id"]), rows}; }
@@ -3654,7 +3775,7 @@ function downloadCSV(kind){
 }
 async function copyTSV(kind){
   const d = exportData(kind);
-  const tsv = [d.head].concat(d.rows).map(r => r.map(v => String(v == null ? "" : v).replace(/[\t\n\r]+/g, " ")).join("\t")).join("\n");
+  const tsv = [d.head].concat(d.rows).map(r => r.map(v => String(v == null ? "" : xlSafe(v)).replace(/[\t\n\r]+/g, " ")).join("\t")).join("\n");
   try { await navigator.clipboard.writeText(tsv); toast("Copied " + d.rows.length + " rows — paste into Excel", "ok"); }
   catch (e){ toast("Copy not allowed in this browser", "bad"); }
 }
@@ -3663,7 +3784,7 @@ async function copyTSV(kind){
 function pageSettings(){
   const el = pageSheet({title:"Settings & connection", hi:"सेटिंग", render:() => {
     const u = urls(), o = lsGet("pt-urls", {}) || {}, pend = DB.outbox.filter(e => !DB.ids.has(e.id)).length;
-    let h = '<div class="panel"><div class="ph"><h2>You<span class="hi">आप</span></h2></div>' + fld("Your name (saved with every entry)", "आपका नाम", '<input class="in" id="setName" value="' + esc(userName()) + '" placeholder="e.g. Om">') + '<button class="btn btn-primary" data-act="set-name" type="button">Save name</button></div>' +
+    let h = me() ? accountPanel() : '<div class="panel"><div class="ph"><h2>You<span class="hi">आप</span></h2></div>' + fld("Your name (saved with every entry)", "आपका नाम", '<input class="in" id="setName" value="' + esc(userName()) + '" placeholder="e.g. Om">') + '<button class="btn btn-primary" data-act="set-name" type="button">Save name</button></div>' +
       (MODE === "online" ? '<div class="panel"><div class="ph"><h2>Access code<span class="hi">ऐक्सेस कोड</span></h2></div><div class="prose">This device is unlocked. On a shared PC, lock it when you leave — the code is then needed to open the app again. The code itself is set in the Google Sheet’s Apps Script (Project settings → Script properties → ACCESS_CODE).</div><button class="btn" style="margin-top:8px" data-act="lock-dev" type="button">' + ic("lock") + 'Lock this device</button></div>' : '');
     if (MODE === "preview") h += '<div class="panel"><div class="ph"><h2>Preview</h2></div><div class="prose">This hosted preview runs on sample data and cannot reach Google. Use the downloadable file (with your Apps Script URL) for real use.</div></div>';
     else {
@@ -3675,12 +3796,22 @@ function pageSettings(){
         fld("PM Tracker backend URL", "", '<input class="in" id="setTool" value="' + esc(o.tool || "") + '" placeholder="' + esc(TOOL_BACKEND_URL || "…/exec") + '">', {hint:"Leave empty to use the PM Tracker URL built into this file." + (TOOLS.err ? '<br><span style="color:#f08a7c">Last error: ' + esc(TOOLS.err) + '</span>' : "")}) +
         '<div class="row wrap"><button class="btn" data-act="set-tool" type="button">Save & read now</button></div></div>';
     }
-    h += '<div class="panel"><div class="ph"><h2>Manager PIN<span class="hi">पिन</span></h2></div><div class="prose">Needed to edit parts & schedule and to cancel entries. Default is 1234 — same as PM Tracker. ' + (STATE.cfg.pin ? "A custom PIN is set." : "<b>Still the default.</b>") + '</div><button class="btn" style="margin-top:8px" data-act="set-pin" type="button">' + ic("lock") + 'Change PIN</button></div>';
+    if (!me()) h += '<div class="panel"><div class="ph"><h2>Manager PIN<span class="hi">पिन</span></h2></div><div class="prose">Needed to edit parts & schedule and to cancel entries. Default is 1234 — same as PM Tracker. ' + (STATE.cfg.pin ? "A custom PIN is set." : "<b>Still the default.</b>") + '</div><button class="btn" style="margin-top:8px" data-act="set-pin" type="button">' + ic("lock") + 'Change PIN</button></div>';
     if (MODE !== "preview") h += '<div class="panel"><div class="ph"><h2>Sample data<span class="hi">डेमो</span></h2></div><div class="prose">Explore the app with two weeks of made-up data. Your real data is untouched and nothing is uploaded.</div><button class="btn" style="margin-top:8px" data-act="' + (MODE === "sample" ? "exit-sample" : "try-sample") + '" type="button">' + (MODE === "sample" ? "Exit sample data" : "Try with sample data") + '</button></div>';
     h += '<div class="hint" style="text-align:center">Mode: ' + MODE + ' · device ' + esc(deviceId()) + ' · v' + APP_VER + '</div>';
     return h;
   }});
   return el;
+}
+function accountPanel(){
+  const m = me(), lim = idleMin();
+  const opts = [[15, "15 minutes"], [60, "1 hour"], [240, "4 hours"], [720, "12 hours"], [0, "Never (personal phone)"]];
+  return '<div class="panel"><div class="ph"><h2>Your login<span class="hi">लॉग इन</span></h2>' + badge("b-ok", ROLE_TXT[m.role] || m.role) + '</div>' +
+    '<div class="prose">Logged in as <b>' + esc(m.name) + '</b> · user ID <code>' + esc(m.id) + '</code>. The Google Sheet records this login on every entry made here.</div>' +
+    fld("Log out automatically after no use", "अपने आप लॉग आउट", '<select class="in" id="setIdle">' + opts.map(o => '<option value="' + o[0] + '"' + (o[0] === lim ? " selected" : "") + '>' + o[1] + '</option>').join("") + '</select>', {hint:"This device only. Keep it short on shared PCs and phones."}) +
+    '<div class="row wrap"><button class="btn" data-act="pw-change" type="button">' + ic("lock") + 'Change password</button>' +
+    (isAdmin() ? '<button class="btn" data-act="more" data-p="users" type="button">' + ic("users") + 'Users & passwords</button>' : "") +
+    '<button class="btn btn-danger" data-act="logout" type="button">Log out</button></div></div>';
 }
 async function testUrl(u){
   if (!u) return toast("Enter the URL first", "bad");
@@ -3705,6 +3836,70 @@ async function changePin(){
   toast("PIN changed for all devices", "ok"); render();
 }
 
+/* ---------- Users & passwords (admin) ---------- */
+const USERS = {list:null, err:"", loading:false, el:null};
+async function loadUsers(){
+  USERS.loading = true; if (USERS.el && USERS.el._draw) USERS.el._draw();
+  try { const r = await ptCall("users.list", {}); USERS.list = r.users || []; USERS.err = ""; }
+  catch (e){ USERS.err = e.message || String(e); }
+  USERS.loading = false; if (USERS.el && USERS.el._draw) USERS.el._draw();
+}
+function pageUsers(){
+  if (!isAdmin()) return toast("Only an admin can manage users", "bad");
+  USERS.el = pageSheet({title:"Users & passwords", hi:"यूज़र व पासवर्ड", render:() => {
+    let h = '<div class="prose" style="margin-bottom:12px">Each person logs in with their own user ID and password, and the Google Sheet records the login on every entry. ' +
+      '<b>Entry</b>: makes entries, can undo their own entry for 20 minutes. <b>Manager</b>: also edits and deletes entries, parts and the schedule. <b>Admin</b>: also manages users.</div>' +
+      '<div class="row wrap" style="margin-bottom:12px"><button class="btn btn-primary" data-act="user-edit" data-id="" type="button">' + ic("plus") + 'Add user</button><button class="btn btn-ghost" data-act="users-reload" type="button">' + ic("sync") + 'Refresh</button></div>';
+    if (USERS.err) h += '<div class="banner warn">' + ic("alert") + '<div>' + esc(USERS.err) + '</div></div>';
+    if (!USERS.list) return h + '<div class="empty">' + (USERS.loading ? "Loading…" : "Not loaded") + '</div>';
+    return h + '<div class="panel" style="padding:4px 12px">' + USERS.list.map(u => '<button class="lrow" data-act="user-edit" data-id="' + esc(u.id) + '" type="button"><span class="l-ico">' + ic("users") + '</span><span class="l-main"><span class="l-t" style="display:block">' + esc(u.name) + ' <span class="faint" style="font-size:12px">' + esc(u.id) + '</span></span>' +
+      '<span class="l-s" style="display:block">' + esc(ROLE_TXT[u.role] || u.role) + (u.mustChange ? " · temporary password" : "") + (u.lastLogin ? " · last login " + fmtDT(u.lastLogin) : " · never logged in") + '</span></span>' + (u.active ? "" : badge("b-warn", "Disabled")) + ic("chev", "faint") + '</button>').join("") + '</div>';
+  }});
+  loadUsers();
+}
+function formUser(id){
+  const u = id ? (USERS.list || []).find(x => x.id === id) : null, isMe = !!u && u.id === myId();
+  const el = pageSheet({title:u ? u.name : "Add user", hi:u ? "user ID " + u.id : "नया यूज़र", render:() =>
+    (u ? "" : fld("User ID (to log in)", "यूज़र आईडी", '<input class="in" id="uId" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="e.g. ramesh">', {hint:"Small letters and digits, no spaces (2–24). It can’t be changed later."})) +
+    fld("Name (shown on entries)", "नाम", '<input class="in" id="uName" value="' + esc(u ? u.name : "") + '" placeholder="e.g. Ramesh Kumar">') +
+    fld("Role", "भूमिका", '<select class="in" id="uRole">' + ["entry", "manager", "admin"].map(r => '<option value="' + r + '"' + ((u ? u.role : "entry") === r ? " selected" : "") + '>' + ROLE_TXT[r] + '</option>').join("") + '</select>') +
+    (u ? fld("Account", "खाता", '<select class="in" id="uAct"><option value="true"' + (u.active ? " selected" : "") + '>Active</option><option value="false"' + (u.active ? "" : " selected") + '>Disabled — can’t log in</option></select>', {hint:isMe ? "This is your own account." : "Disable people who leave. Their past entries keep their name."}) : "") +
+    '<button class="btn btn-primary btn-block" data-act="user-save" data-id="' + esc(u ? u.id : "") + '" type="button">' + (u ? "Save" : "Create user & temporary password") + '</button>' +
+    (u ? '<div class="row wrap" style="margin-top:10px"><button class="btn" data-act="user-reset" data-id="' + esc(u.id) + '" type="button">' + ic("lock") + 'Reset password</button><button class="btn btn-ghost" data-act="user-kick" data-id="' + esc(u.id) + '" type="button">Log out on all devices</button></div>' : "")
+  });
+  el._form = true;      // background syncs must not redraw (and clear) what is being typed
+}
+function showTemp(u, temp){
+  return dialog({title:"Temporary password", msg:"For <b>" + esc(u.name) + "</b> · user ID <b>" + esc(u.id) + "</b>" +
+    '<div class="tmp-pw">' + esc(temp) + '</div>Give it to them in person. At their first login the app makes them choose their own password. It is shown only now.', ok:"Done", cancel:false});
+}
+async function saveUser(d){
+  const isNew = !d.id, g = k => (($("#" + k) || {}).value || "").trim();
+  const p = {id:isNew ? g("uId").toLowerCase() : d.id, name:g("uName"), role:g("uRole") || "entry", active:isNew ? "true" : g("uAct"), isNew:String(isNew)};
+  if (!p.id) return toast("Enter a user ID", "bad");
+  if (!/^[a-z0-9][a-z0-9._-]{1,23}$/.test(p.id)) return toast("User ID: 2–24 small letters/digits, no spaces", "bad");
+  if (!p.name) return toast("Enter the name", "bad");
+  try {
+    const r = await ptCall("users.save", p);
+    closeTop(); await loadUsers();
+    if (r.temp) await showTemp(r.user, r.temp); else toast("Saved", "ok");
+    if (p.id === myId() && (p.role !== myRole() || p.active === "false")){ clearLogin(); showLogin("Your role changed — log in again."); }
+  } catch (e){ toast(e.message || String(e), "bad"); }
+}
+async function resetUser(id){
+  if (!(await confirmBox("Reset password?", "Makes a new temporary password for <b>" + esc(id) + "</b> and logs them out on every device. They choose their own password at the next login.", "Reset password"))) return;
+  try {
+    const r = await ptCall("users.reset", {id});
+    closeTop(); await loadUsers(); await showTemp(r.user, r.temp);
+    if (id === myId()){ clearLogin(); showLogin("Log in with the temporary password."); }
+  } catch (e){ toast(e.message || String(e), "bad"); }
+}
+async function kickUser(id){
+  if (!(await confirmBox("Log out everywhere?", "<b>" + esc(id) + "</b> is logged out on every phone and PC and must log in again. Entries not yet uploaded stay on those devices.", "Log out"))) return;
+  try { await ptCall("users.logout", {id}); toast("Logged out on all devices", "ok"); if (id === myId()){ clearLogin(); showLogin(); } }
+  catch (e){ toast(e.message || String(e), "bad"); }
+}
+
 /* ---------- Setup guide ---------- */
 function pageGuide(){
   pageSheet({title:"Setup guide", hi:"एक बार का सेटअप", render:() => '<div class="prose">' +
@@ -3719,10 +3914,10 @@ function pageGuide(){
 
 function openSyncSheet(){
   pageSheet({title:"Sync status", hi:"सिंक", render:() => {
-    const pend = DB.outbox.filter(e => !DB.ids.has(e.id));
-    let h = '<dl class="kv"><dt>Mode</dt><dd>' + ({preview:"Preview (sample data)", sample:"Sample data", local:"This device only — not connected", online:"Connected to Google Sheet"}[MODE]) + '</dd>' +
+    const pend = DB.outbox.filter(e => !DB.ids.has(e.id) && obMine(e)), other = DB.outbox.filter(e => !DB.ids.has(e.id) && !obMine(e));
+    let h = (me() ? '<div class="hint" style="margin-bottom:10px">Logged in as <b>' + esc(me().name) + '</b> (' + esc(me().id) + ')</div>' : "") + '<dl class="kv"><dt>Mode</dt><dd>' + ({preview:"Preview (sample data)", sample:"Sample data", local:"This device only — not connected", online:"Connected to Google Sheet"}[MODE]) + '</dd>' +
       (MODE === "online" ? '<dt>Last sync</dt><dd>' + (SYNC.lastOk ? fmtDT(SYNC.lastOk) + " (" + ago(SYNC.lastOk) + ")" : "—") + '</dd><dt>On server</dt><dd>' + DB.events.length + ' entries</dd>' : "") +
-      '<dt>Waiting to upload</dt><dd>' + pend.length + '</dd><dt>PM Tracker</dt><dd>' + (isDemo() ? "sample" : TOOLS.ts ? "read " + ago(TOOLS.ts) : "not read") + (TOOLS.err && !isDemo() ? " · error" : "") + '</dd></dl>';
+      '<dt>Waiting to upload</dt><dd>' + pend.length + '</dd>' + (other.length ? '<dt>Waiting for another login</dt><dd>' + other.length + ' · ' + esc([...new Set(other.map(e => e.by))].join(", ")) + ' must log in here to upload them</dd>' : "") + '<dt>PM Tracker</dt><dd>' + (isDemo() ? "sample" : TOOLS.ts ? "read " + ago(TOOLS.ts) : "not read") + (TOOLS.err && !isDemo() ? " · error" : "") + '</dd></dl>';
     if (SYNC.msg && MODE === "online") h += '<div class="banner warn" style="margin:12px 0 0">' + ic("alert") + '<div>' + esc(SYNC.msg) + '</div></div>';
     if (pend.length) h += '<div class="sec-h">Waiting to upload</div><div class="panel" style="padding:4px 12px">' + pend.slice(-20).reverse().map(e => activityRow(STATE, e)).join("") + '</div>';
     h += '<div class="row wrap" style="margin-top:14px">' + (MODE === "online" ? '<button class="btn btn-primary" data-act="sync" type="button">' + ic("sync") + 'Sync now</button>' : "") + '<button class="btn" data-act="more" data-p="settings" type="button">Settings</button></div>';
@@ -3787,6 +3982,15 @@ const ACT = {
   "test-pt":() => testUrl((($("#setPt") || {}).value || "").trim() || urls().pt),
   "set-tool":async () => { const o = lsGet("pt-urls", {}) || {}; o.tool = (($("#setTool") || {}).value || "").trim(); lsSet("pt-urls", o); TOOLS.ts = 0; TOOLS.list = []; lsDel("pt-tools"); await loadTools(true); toast(TOOLS.err ? "Could not read PM Tracker: " + TOOLS.err : "Read " + machines().length + " machines, " + dies().length + " dies", TOOLS.err ? "bad" : "ok"); render(); },
   "set-pin":() => changePin(),
+  "logout":() => doLogout(false),
+  "logout-now":() => { if (token()) ptCall("logout", {}).catch(() => {}); clearLogin(); showLogin(); },
+  "pw-change":() => showPwForm(false),
+  "pw-cancel":() => unlockDone(),
+  "user-edit":d => formUser(d.id || null),
+  "users-reload":() => loadUsers(),
+  "user-save":d => saveUser(d),
+  "user-reset":d => resetUser(d.id),
+  "user-kick":d => kickUser(d.id),
   "redownload":async () => { if (!(await confirmBox("Re-download everything?", "Clears this device's copy and downloads all entries again. Entries waiting to upload are kept.", "Re-download"))) return; DB.events = []; DB.ids = new Set(); DB.last = 0; await saveEvents(); rebuild(); render(); syncNow(true); },
   "try-sample":async () => { lsSet("pt-sample", true); closeAll(); await boot(); toast("Sample data loaded", "ok"); },
   "exit-sample":async () => { lsDel("pt-sample"); lsDel("pts-outbox"); try { await kvSet("pts-outbox", []); } catch (e) {} closeAll(); await boot(); toast("Back to your data", "ok"); },
@@ -3800,6 +4004,7 @@ document.addEventListener("click", e => {
   try { const r = fn(el.dataset, el, e); if (r && r.catch) r.catch(err => { console.error(err); toast(String(err.message || err), "bad"); }); }
   catch (err){ console.error(err); toast(String(err.message || err), "bad"); }
 });
+document.addEventListener("change", e => { if (e.target && e.target.id === "setIdle"){ lsSet("pt-idle", Number(e.target.value)); touch(true); toast("Saved for this device", "ok"); } });
 let _qT = null;
 document.addEventListener("input", e => {
   if (e.target.id === "trackQ"){
@@ -3820,17 +4025,21 @@ document.addEventListener("input", e => {
 window.addEventListener("hashchange", () => { const t = (location.hash || "").slice(1); if (t && t !== UI.tab && TABS.find(x => x.id === t)){ closeAll(); setTab(t); } });
 window.addEventListener("online", () => { syncNow(); loadTools(true); });
 window.addEventListener("offline", () => { if (MODE === "online") setSync("offline"); });
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible"){ syncNow(); loadTools(); } });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible"){ idleCheck(); if (!LOCKED){ syncNow(); loadTools(); } } });
 
 async function boot(){
-  if (MODE === "online" && !accessKey()) showLock();     // new device: no data on screen until the code is checked
+  if (computeMode() === "online"){               // nothing on screen until the login (or old code) is checked
+    if (me() && me().mustChange) showPwForm(true);
+    else if (me() && idleOver()){ ptCall("logout", {}).catch(() => {}); clearLogin(); showLogin("Logged out after " + idleLabel(idleMin()) + " without use."); }
+    else if (!token() && (lsGet("pt-srv-users", false) || !accessKey())) gate();
+  }
   await dbLoad();
   rebuild();
   const h = (location.hash || "").slice(1);
   if (h && TABS.find(x => x.id === h)) UI.tab = h;
   render();
   loadTools().then(() => render());
-  if (MODE === "online"){ syncNow(); startSyncLoop(); }
+  if (MODE === "online"){ if (!LOCKED) syncNow(); startSyncLoop(); }
   else { clearInterval(SYNC.timer); setSync(MODE); }
   if (!LOCKED && !userName() && !isDemo() && !boot._asked){
     boot._asked = true;

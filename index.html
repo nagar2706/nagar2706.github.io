@@ -321,6 +321,13 @@ input[type="date"].in{color-scheme:dark;}
 .entry .e-t{font-size:14px;font-weight:800;line-height:1.2;}
 .entry .e-hi{font-size:11.5px;color:var(--ink-dim);}
 .entry.wide{grid-column:span 2;min-height:0;flex-direction:row;align-items:center;}
+.lockscr{position:fixed;inset:0;z-index:9999;background:var(--bg,#15181c);display:flex;align-items:center;justify-content:center;padding:24px;}
+.lockbox{width:min(360px,100%);text-align:center;}
+.lockbox .lk-ico{width:64px;height:64px;border-radius:18px;background:var(--panel-2);border:1px solid var(--line);display:grid;place-items:center;margin:0 auto 16px;color:var(--amber);}
+.lockbox .lk-ico svg{width:30px;height:30px;}
+.lockbox h1{font-size:20px;margin:0 0 4px;}
+.lockbox .in{text-align:center;font-size:24px;letter-spacing:.3em;font-family:var(--mono);margin:18px 0 10px;}
+.lockbox .lk-msg{min-height:20px;font-size:13px;margin-bottom:10px;}
 .entry.feat{border-color:var(--amber);background:linear-gradient(135deg,var(--amber-dim),var(--panel) 75%);padding:15px 13px;}
 .entry.feat .e-ico{background:var(--amber);color:#1a1206;width:46px;height:46px;}
 .entry.feat .e-t{font-size:16px;}
@@ -511,7 +518,7 @@ const TOOL_BACKEND_URL = "https://script.google.com/macros/s/AKfycbwJ4mCkKguQ2dh
 
 /* ===================================================================================== */
 const PREVIEW = false;          // true only in the hosted preview build (sample data, no server)
-const APP_VER = "1.1";
+const APP_VER = "1.2";
 const DEFAULT_PIN = "1234";     // manager PIN until changed in Settings (same default as PM Tracker)
 const SYNC_EVERY_MS = 90 * 1000;
 
@@ -676,6 +683,52 @@ function namesFor(list){
   return out.slice(0, 40);
 }
 
+/* ---------- Team access code ----------
+   The Google Sheet backend (Code.gs) refuses to send or save data without the code, so the
+   link and the public page code alone are not enough. Each device asks once and remembers it. */
+let LOCKED = false;
+function accessKey(){ return String(lsGet("pt-key", "") || ""); }
+function showLock(msg){
+  LOCKED = true;
+  let el = document.getElementById("lockscr");
+  if (!el){
+    el = document.createElement("div"); el.id = "lockscr"; el.className = "lockscr";
+    el.innerHTML = '<form class="lockbox" autocomplete="off"><div class="lk-ico">' + ic("lock") + '</div><h1>' + esc(document.title.split("—")[0].trim() || "Dashboard") + '</h1>' +
+      '<div class="faint" style="font-size:13px">Enter the team access code<br>टीम ऐक्सेस कोड डालें</div>' +
+      '<input class="in" id="lkIn" type="password" inputmode="numeric" autocomplete="off" enterkeyhint="go" placeholder="••••••">' +
+      '<div class="lk-msg" id="lkMsg"></div><button class="btn btn-primary btn-block btn-lg" id="lkBtn" type="submit">Unlock · खोलें</button>' +
+      '<div class="faint" style="font-size:11.5px;margin-top:14px">Ask the production manager for the code.</div></form>';
+    document.body.appendChild(el);
+    el.querySelector("form").addEventListener("submit", e => { e.preventDefault(); tryUnlock(); });
+  }
+  el.style.display = "";
+  const m = document.getElementById("lkMsg"); if (m){ m.textContent = msg || ""; m.style.color = msg ? "#f2c35a" : ""; }
+  const v = $("#view"); if (v) v.innerHTML = "";
+  setTimeout(() => { const i = document.getElementById("lkIn"); if (i) i.focus(); }, 50);
+}
+async function tryUnlock(){
+  const i = document.getElementById("lkIn"), m = document.getElementById("lkMsg"), b = document.getElementById("lkBtn");
+  const code = String(i.value || "").trim();
+  const say = (t, bad) => { m.textContent = t; m.style.color = bad ? "#f08a7c" : ""; };
+  if (!code) return say("Enter the code", true);
+  b.disabled = true; say("Checking…");
+  const prev = accessKey(); lsSet("pt-key", code);
+  try {
+    const r = await ptCall("ping", {});
+    if (r.auth === false) throw Object.assign(new Error("Wrong code"), {locked:true});
+    LOCKED = false;
+    const el = document.getElementById("lockscr"); if (el) el.style.display = "none";
+    i.value = ""; render(); syncNow(); startSyncLoop();
+    if (!userName() && !boot._asked){ boot._asked = true;
+      setTimeout(async () => { const n = await dialog({title:"Your name", msg:"Saved with every entry you make, so the log shows who entered what.<br><span class='faint'>आपका नाम — हर एंट्री के साथ सेव होगा</span>", input:{ph:"e.g. Om"}, ok:"Save", cancel:"Later"}); if (n && n.trim()){ lsSet("pt-user", n.trim()); render(); } }, 300); }
+  } catch (e){
+    lsSet("pt-key", e && e.locked ? "" : prev);
+    if (e && e.locked) say("Wrong code — try again", true);
+    else say(navigator.onLine === false ? "No internet — the code is checked online the first time." : "Couldn’t reach the Google Sheet: " + (e.message || e), true);
+    i.select();
+  } finally { b.disabled = false; }
+}
+
 /* ---------- backend calls ---------- */
 async function fetchTO(url, opts, ms){
   const ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
@@ -688,9 +741,11 @@ async function ptCall(action, params, urlOverride){
   if (!url) throw new Error("Google Sheet not connected");
   const body = new URLSearchParams();
   body.set("action", action);
+  body.set("key", accessKey());
   for (const k in (params || {})) body.set(k, typeof params[k] === "string" ? params[k] : JSON.stringify(params[k]));
   const r = await fetchTO(url, {method:"POST", body, redirect:"follow"}, 45000);
   let j; try { j = await r.json(); } catch (e){ throw new Error("Server reply was not JSON — check the web app URL and that access is set to “Anyone”"); }
+  if (j && j.locked){ const er = new Error(j.error || "Access code needed"); er.locked = true; throw er; }
   if (!j || j.ok === false) throw new Error((j && j.error) || "Server error");
   return j;
 }
@@ -743,7 +798,8 @@ async function syncNow(manual){
     SYNC.lastOk = Date.now(); lsSet("pt-lastsync", SYNC.lastOk);
     setSync(DB.outbox.length ? "pend" : "ok");
   } catch (e){
-    setSync((typeof navigator !== "undefined" && navigator.onLine === false) ? "offline" : "error", String(e && e.message || e));
+    if (e && e.locked){ const had = !!accessKey(); lsSet("pt-key", ""); setSync("error", "Access code needed"); showLock(had ? "The access code has changed — enter the new one." : (document.getElementById("lkMsg") || {}).textContent || ""); }
+    else setSync((typeof navigator !== "undefined" && navigator.onLine === false) ? "offline" : "error", String(e && e.message || e));
   } finally {
     SYNC.busy = false;
     rebuild(); render();
@@ -1881,6 +1937,7 @@ function renderBanner(){
   else b.innerHTML = "";
 }
 function render(){
+  if (LOCKED){ const v = $("#view"); if (v) v.innerHTML = ""; return; }
   try {
     renderShell(); renderSync(); renderBanner();
     const v = $("#view");
@@ -3606,7 +3663,8 @@ async function copyTSV(kind){
 function pageSettings(){
   const el = pageSheet({title:"Settings & connection", hi:"सेटिंग", render:() => {
     const u = urls(), o = lsGet("pt-urls", {}) || {}, pend = DB.outbox.filter(e => !DB.ids.has(e.id)).length;
-    let h = '<div class="panel"><div class="ph"><h2>You<span class="hi">आप</span></h2></div>' + fld("Your name (saved with every entry)", "आपका नाम", '<input class="in" id="setName" value="' + esc(userName()) + '" placeholder="e.g. Om">') + '<button class="btn btn-primary" data-act="set-name" type="button">Save name</button></div>';
+    let h = '<div class="panel"><div class="ph"><h2>You<span class="hi">आप</span></h2></div>' + fld("Your name (saved with every entry)", "आपका नाम", '<input class="in" id="setName" value="' + esc(userName()) + '" placeholder="e.g. Om">') + '<button class="btn btn-primary" data-act="set-name" type="button">Save name</button></div>' +
+      (MODE === "online" ? '<div class="panel"><div class="ph"><h2>Access code<span class="hi">ऐक्सेस कोड</span></h2></div><div class="prose">This device is unlocked. On a shared PC, lock it when you leave — the code is then needed to open the app again. The code itself is set in the Google Sheet’s Apps Script (Project settings → Script properties → ACCESS_CODE).</div><button class="btn" style="margin-top:8px" data-act="lock-dev" type="button">' + ic("lock") + 'Lock this device</button></div>' : '');
     if (MODE === "preview") h += '<div class="panel"><div class="ph"><h2>Preview</h2></div><div class="prose">This hosted preview runs on sample data and cannot reach Google. Use the downloadable file (with your Apps Script URL) for real use.</div></div>';
     else {
       h += '<div class="panel"><div class="ph"><h2>Google Sheet (production data)<span class="hi">डेटा</span></h2>' + (MODE === "online" ? badge("b-ok", "Connected") : badge("b-warn", "Not connected")) + '</div>' +
@@ -3723,6 +3781,7 @@ const ACT = {
   "sync-open":() => openSyncSheet(),
   "exp-dl":d => downloadCSV(d.k),
   "exp-copy":d => copyTSV(d.k),
+  "lock-dev":async () => { if (!(await confirmBox("Lock this device?", "The team access code will be needed to open the app again on this device. Entries not yet uploaded stay saved and upload after unlocking.", "Lock"))) return; lsSet("pt-key", ""); showLock(); },
   "set-name":() => { const v = (($("#setName") || {}).value || "").trim(); if (!v) return toast("Enter your name", "bad"); lsSet("pt-user", v); toast("Saved — entries will show “" + v + "”", "ok"); render(); },
   "set-pt":() => setPtUrl(),
   "test-pt":() => testUrl((($("#setPt") || {}).value || "").trim() || urls().pt),
@@ -3764,6 +3823,7 @@ window.addEventListener("offline", () => { if (MODE === "online") setSync("offli
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible"){ syncNow(); loadTools(); } });
 
 async function boot(){
+  if (MODE === "online" && !accessKey()) showLock();     // new device: no data on screen until the code is checked
   await dbLoad();
   rebuild();
   const h = (location.hash || "").slice(1);
@@ -3772,7 +3832,7 @@ async function boot(){
   loadTools().then(() => render());
   if (MODE === "online"){ syncNow(); startSyncLoop(); }
   else { clearInterval(SYNC.timer); setSync(MODE); }
-  if (!userName() && !isDemo() && !boot._asked){
+  if (!LOCKED && !userName() && !isDemo() && !boot._asked){
     boot._asked = true;
     setTimeout(async () => {
       const n = await dialog({title:"Your name", msg:"Saved with every entry you make, so the log shows who entered what.<br><span class='faint'>आपका नाम — हर एंट्री के साथ सेव होगा</span>", input:{ph:"e.g. Om"}, ok:"Save", cancel:"Later"});
